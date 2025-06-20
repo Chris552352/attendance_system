@@ -65,8 +65,9 @@
 ### 6. Comptes de Connexion
 
 #### Comptes Enseignants
-- **Admin** : `chris552352@gmail.com` / `password`
-- **Enseignant** : `jean.martin@example.com` / `password`
+- **Administrateur** : `chris552352@gmail.com` / `552352`
+- **Enseignant 1** : `marie.dupont@example.com` / `password`
+- **Enseignant 2** : `jean.martin@example.com` / `password`
 
 #### Comptes Étudiants (exemples)
 - `angesimo@gmail.com` / `sim045` (Simo Ange - matricule 1045)

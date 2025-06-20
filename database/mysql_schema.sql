@@ -83,7 +83,8 @@ CREATE TABLE `presences` (
 
 -- Insert sample data
 INSERT INTO `utilisateurs` (`id`, `nom`, `prenom`, `email`, `mot_de_passe`, `role`) VALUES
-(372, 'Dupont', 'Chris', 'chris552352@gmail.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'enseignant'),
+(1, 'Admin', 'Chris', 'chris552352@gmail.com', '$2y$10$/f3glrQ1ygJljOKN9s99L.OMvsaS/pnPVCDTKOQmfRPod7NZeT3dK', 'admin'),
+(372, 'Dupont', 'Marie', 'marie.dupont@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'enseignant'),
 (732, 'Martin', 'Jean', 'jean.martin@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'enseignant');
 
 INSERT INTO `cours` (`id`, `code`, `nom`, `enseignant_id`, `description`) VALUES

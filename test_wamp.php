@@ -202,12 +202,16 @@ ini_set('display_errors', 1);
         // Comptes de test
         echo "<h2>👥 Comptes de Test</h2>";
         echo "<div class='info'>";
-        echo "<strong>Enseignant:</strong><br>";
+        echo "<strong>Administrateur:</strong><br>";
         echo "• Email: <code>chris552352@gmail.com</code><br>";
-        echo "• Mot de passe: <code>password</code><br><br>";
-        echo "<strong>Étudiant:</strong><br>";
-        echo "• Email: <code>angesimo@gmail.com</code><br>";
-        echo "• Mot de passe: <code>password</code><br>";
+        echo "• Mot de passe: <code>552352</code><br><br>";
+        echo "<strong>Enseignants:</strong><br>";
+        echo "• <code>marie.dupont@example.com</code> / <code>password</code><br>";
+        echo "• <code>jean.martin@example.com</code> / <code>password</code><br><br>";
+        echo "<strong>Étudiants (exemples):</strong><br>";
+        echo "• <code>angesimo@gmail.com</code> / <code>sim045</code><br>";
+        echo "• <code>Ateba@gmail.com</code> / <code>ate022</code><br>";
+        echo "• Les étudiants peuvent créer leurs comptes via l'interface d'inscription<br>";
         echo "</div>";
 
         // Informations système
