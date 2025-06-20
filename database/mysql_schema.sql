@@ -66,6 +66,7 @@ CREATE TABLE `presences` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `etudiant_id` int(11) NOT NULL,
   `cours_id` int(11) NOT NULL,
+  `seance_id` int(11) DEFAULT NULL,
   `date_presence` date NOT NULL,
   `statut` enum('present','absent') COLLATE utf8mb4_unicode_ci DEFAULT 'present',
   `justification` text COLLATE utf8mb4_unicode_ci,
@@ -73,12 +74,14 @@ CREATE TABLE `presences` (
   `enregistre_par` int(11) NOT NULL,
   `date_enregistrement` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `etudiant_cours_date` (`etudiant_id`,`cours_id`,`date_presence`),
+  UNIQUE KEY `etudiant_seance` (`etudiant_id`,`seance_id`),
   KEY `cours_id` (`cours_id`),
+  KEY `seance_id` (`seance_id`),
   KEY `enregistre_par` (`enregistre_par`),
   CONSTRAINT `presences_ibfk_1` FOREIGN KEY (`etudiant_id`) REFERENCES `etudiants` (`id`),
   CONSTRAINT `presences_ibfk_2` FOREIGN KEY (`cours_id`) REFERENCES `cours` (`id`),
-  CONSTRAINT `presences_ibfk_3` FOREIGN KEY (`enregistre_par`) REFERENCES `utilisateurs` (`id`)
+  CONSTRAINT `presences_ibfk_3` FOREIGN KEY (`enregistre_par`) REFERENCES `utilisateurs` (`id`),
+  CONSTRAINT `presences_ibfk_4` FOREIGN KEY (`seance_id`) REFERENCES `seances` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Table: seances (pour les QR codes)
