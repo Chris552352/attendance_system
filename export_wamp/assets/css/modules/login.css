@@ -1,0 +1,33 @@
+/* Styles pour la page de connexion */
+
+.login-container {
+    max-width: 450px;
+    margin: 100px auto;
+    background-color: white;
+    padding: 35px;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border-top: 5px solid var(--couleur-primaire);
+    position: relative;
+    overflow: hidden;
+}
+
+.login-container:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(to right, var(--couleur-primaire), var(--couleur-avertissement), var(--couleur-accent));
+}
+
+.login-title {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.login-title h2 {
+    font-size: 1.8em;
+    margin-bottom: 10px;
+}

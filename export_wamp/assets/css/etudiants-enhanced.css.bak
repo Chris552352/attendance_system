@@ -1,0 +1,460 @@
+/* Styles amu00e9lioru00e9s pour la page u00e9tudiants */
+
+/* Fond avec motif subtil */
+.student-page-bg {
+    background-color: #f8f9fa;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    position: relative;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(142, 36, 170, 0.1);
+    padding: 30px;
+    margin-bottom: 30px;
+    overflow: hidden;
+}
+
+/* Effet de vague du00e9coratif */
+.student-page-bg::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    left: -50px;
+    right: -50px;
+    height: 100px;
+    background: linear-gradient(135deg, rgba(142, 36, 170, 0.1) 0%, rgba(171, 71, 188, 0.05) 100%);
+    border-radius: 50%;
+    transform: rotate(-3deg);
+    z-index: 0;
+}
+
+.student-page-bg::after {
+    content: '';
+    position: absolute;
+    bottom: -50px;
+    left: -50px;
+    right: -50px;
+    height: 100px;
+    background: linear-gradient(135deg, rgba(142, 36, 170, 0.05) 0%, rgba(171, 71, 188, 0.1) 100%);
+    border-radius: 50%;
+    transform: rotate(3deg);
+    z-index: 0;
+}
+
+/* Titre avec effet 3D */
+.student-title {
+    color: #8e24aa;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    position: relative;
+    z-index: 1;
+    transition: all 0.3s ease;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px dashed rgba(142, 36, 170, 0.2);
+}
+
+.student-title:hover {
+    transform: translateY(-2px);
+    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+.student-title i {
+    background: linear-gradient(135deg, #8e24aa 0%, #ab47bc 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-right: 10px;
+    font-size: 1.3em;
+    vertical-align: middle;
+}
+
+/* Bouton ajouter avec animation */
+.btn-add-student {
+    background: linear-gradient(135deg, #8e24aa 0%, #ab47bc 100%);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 10px 25px;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(142, 36, 170, 0.3);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.btn-add-student:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(142, 36, 170, 0.4);
+    color: white;
+}
+
+.btn-add-student::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #ab47bc 0%, #8e24aa 100%);
+    z-index: -1;
+    transition: opacity 0.3s ease;
+    opacity: 0;
+}
+
+.btn-add-student:hover::after {
+    opacity: 1;
+}
+
+.btn-add-student i {
+    margin-right: 8px;
+    transition: transform 0.3s ease;
+}
+
+.btn-add-student:hover i {
+    transform: rotate(90deg);
+}
+
+/* Image du00e9corative avec animation */
+.student-image-container {
+    position: relative;
+    text-align: center;
+    margin-bottom: 30px;
+    z-index: 1;
+}
+
+.student-image {
+    max-height: 250px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(142, 36, 170, 0.3);
+    transition: all 0.5s ease;
+    border: 3px solid #8e24aa;
+    position: relative;
+    z-index: 2;
+}
+
+.student-image:hover {
+    transform: scale(1.03) translateY(-5px);
+    box-shadow: 0 15px 40px rgba(142, 36, 170, 0.4);
+}
+
+/* Effet de particules autour de l'image */
+.student-image-container::before,
+.student-image-container::after {
+    content: '';
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(142, 36, 170, 0.1) 0%, rgba(142, 36, 170, 0) 70%);
+    z-index: 1;
+    animation: pulse 4s infinite alternate;
+}
+
+.student-image-container::before {
+    top: -50px;
+    left: 20%;
+    animation-delay: 0s;
+}
+
+.student-image-container::after {
+    bottom: -50px;
+    right: 20%;
+    animation-delay: 2s;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.3;
+    }
+    100% {
+        transform: scale(1.2);
+        opacity: 0.1;
+    }
+}
+
+/* Carte avec effet de profondeur */
+.student-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 1;
+    background-color: white;
+}
+
+.student-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(142, 36, 170, 0.15);
+}
+
+.student-card-header {
+    background: linear-gradient(135deg, #8e24aa 0%, #6a1b9a 100%);
+    color: white;
+    border: none;
+    padding: 15px 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.student-card-header::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 80%);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.student-card:hover .student-card-header::after {
+    opacity: 1;
+}
+
+.student-card-title {
+    margin: 0;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+}
+
+.student-card-title i {
+    margin-right: 10px;
+    font-size: 1.1em;
+}
+
+.student-card-body {
+    padding: 20px;
+}
+
+/* Tableau avec effets */
+.student-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.student-table thead {
+    background: linear-gradient(to right, #8e24aa, #ab47bc);
+    color: white;
+}
+
+.student-table th {
+    padding: 15px 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    border: none;
+    position: relative;
+}
+
+.student-table th:first-child {
+    border-top-left-radius: 10px;
+}
+
+.student-table th:last-child {
+    border-top-right-radius: 10px;
+}
+
+.student-table tbody tr {
+    transition: all 0.2s ease;
+    background-color: white;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.student-table tbody tr:hover {
+    background-color: rgba(142, 36, 170, 0.05);
+    transform: scale(1.01);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    z-index: 10;
+    position: relative;
+}
+
+.student-table td {
+    padding: 12px 10px;
+    vertical-align: middle;
+    border: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Boutons d'action */
+.btn-edit {
+    background-color: #ab47bc;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 12px;
+    margin-right: 5px;
+    box-shadow: 0 3px 10px rgba(171, 71, 188, 0.3);
+    transition: all 0.2s ease;
+}
+
+.btn-edit:hover {
+    background-color: #9c27b0;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(171, 71, 188, 0.4);
+    color: white;
+}
+
+.btn-delete {
+    background-color: #ff5722;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 12px;
+    box-shadow: 0 3px 10px rgba(255, 87, 34, 0.3);
+    transition: all 0.2s ease;
+}
+
+.btn-delete:hover {
+    background-color: #e64a19;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 87, 34, 0.4);
+    color: white;
+}
+
+/* Badges et u00e9tiquettes */
+.student-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.8em;
+    font-weight: 600;
+    background-color: rgba(142, 36, 170, 0.1);
+    color: #8e24aa;
+    margin-right: 5px;
+    box-shadow: 0 2px 5px rgba(142, 36, 170, 0.1);
+    transition: all 0.2s ease;
+}
+
+.student-badge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(142, 36, 170, 0.2);
+}
+
+/* Animations de chargement */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.student-fade-in {
+    animation: fadeIn 0.5s ease forwards;
+}
+
+/* u00c9lu00e9ments du00e9coratifs */
+.decorative-dots {
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    background-image: radial-gradient(circle, #8e24aa 1px, transparent 1px);
+    background-size: 20px 20px;
+    opacity: 0.1;
+    z-index: 0;
+}
+
+.dots-top-right {
+    top: -50px;
+    right: -50px;
+    transform: rotate(15deg);
+}
+
+.dots-bottom-left {
+    bottom: -50px;
+    left: -50px;
+    transform: rotate(-15deg);
+}
+
+/* Pagination stylishu00e9e */
+.student-pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+.student-pagination .page-item .page-link {
+    border: none;
+    margin: 0 5px;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #8e24aa;
+    background-color: white;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+
+.student-pagination .page-item .page-link:hover {
+    background-color: rgba(142, 36, 170, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.student-pagination .page-item.active .page-link {
+    background-color: #8e24aa;
+    color: white;
+    box-shadow: 0 5px 15px rgba(142, 36, 170, 0.3);
+}
+
+/* Indicateur de statut */
+.status-indicator {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.status-active {
+    background-color: #4caf50;
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+}
+
+.status-inactive {
+    background-color: #f44336;
+    box-shadow: 0 0 10px rgba(244, 67, 54, 0.5);
+}
+
+/* Tooltip personnalisu00e9 */
+.custom-tooltip {
+    position: relative;
+}
+
+.custom-tooltip:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 100;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .student-page-bg {
+        padding: 15px;
+    }
+    
+    .student-image {
+        max-height: 180px;
+    }
+    
+    .student-title {
+        font-size: 1.5rem;
+    }
+}

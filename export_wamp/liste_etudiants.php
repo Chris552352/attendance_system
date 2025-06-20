@@ -1,0 +1,177 @@
+<?php
+/**
+ * Page d'affichage des étudiants inscrits à un cours
+ */
+
+// Inclure les fichiers nécessaires
+require_once 'includes/auth.php';
+require_once 'config/database.php';
+
+// Vérifier l'authentification
+require_auth();
+
+// Récupérer l'ID du cours
+$cours_id = isset($_GET['cours_id']) ? (int)$_GET['cours_id'] : 0;
+
+// Vérifier si le cours existe
+if ($cours_id <= 0) {
+    alerte("Veuillez sélectionner un cours valide.", "warning");
+    rediriger("mes_cours.php");
+}
+
+// Vérifier si l'enseignant a le droit d'accéder à ce cours
+if (!est_admin()) {
+    $cours_autorise = db_query_single("SELECT id FROM cours WHERE id = ? AND enseignant_id = ?", [$cours_id, $_SESSION['user_id']]);
+    if (!$cours_autorise) {
+        alerte("Vous n'avez pas les droits nécessaires pour accéder à ce cours.", "danger");
+        rediriger("mes_cours.php");
+    }
+}
+
+// Récupérer les informations du cours
+$cours = db_query_single("
+    SELECT c.*, u.nom as enseignant_nom, u.prenom as enseignant_prenom, u.email as enseignant_email
+    FROM cours c
+    LEFT JOIN utilisateurs u ON c.enseignant_id = u.id
+    WHERE c.id = ?
+", [$cours_id]);
+
+if (!$cours) {
+    alerte("Cours introuvable.", "danger");
+    rediriger("mes_cours.php");
+}
+
+// Récupérer la liste des étudiants inscrits au cours
+$etudiants = db_query("
+    SELECT e.*, 
+           (SELECT COUNT(*) FROM presences p WHERE p.etudiant_id = e.id AND p.cours_id = ? AND p.statut = 'present') as nb_presences,
+           (SELECT COUNT(*) FROM presences p WHERE p.etudiant_id = e.id AND p.cours_id = ? AND p.statut = 'absent' AND p.justifie = FALSE) as absences_non_justifiees,
+           (SELECT COUNT(*) FROM presences p WHERE p.etudiant_id = e.id AND p.cours_id = ? AND p.statut = 'absent' AND p.justifie = TRUE) as absences_justifiees
+    FROM etudiants e
+    JOIN inscriptions i ON e.id = i.etudiant_id
+    WHERE i.cours_id = ?
+    ORDER BY e.nom, e.prenom
+", [$cours_id, $cours_id, $cours_id, $cours_id]);
+
+// Inclure le header
+include 'includes/header.php';
+?>
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2"><i class="fas fa-users"></i> Étudiants du Cours</h1>
+        <div>
+            <a href="mes_cours.php" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Retour aux cours
+            </a>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-dark text-white">
+            <h5 class="card-title mb-0"><i class="fas fa-info-circle"></i> Informations du Cours</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h4><?= htmlspecialchars($cours['nom']) ?> <small class="text-muted">(<?= htmlspecialchars($cours['code']) ?>)</small></h4>
+                    <?php if (!empty($cours['description'])): ?>
+                        <p><?= nl2br(htmlspecialchars($cours['description'])) ?></p>
+                    <?php endif; ?>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0"><i class="fas fa-chalkboard-teacher"></i> Enseignant</h5>
+                        </div>
+                        <div class="card-body">
+                            <?php if ($cours['enseignant_id']): ?>
+                                <div class="d-flex align-items-center">
+                                    <div class="teacher-avatar">
+                                        <i class="fas fa-user-circle fa-3x"></i>
+                                    </div>
+                                    <div class="ms-3">
+                                        <h5 class="mb-1"><?= htmlspecialchars($cours['enseignant_nom'] . ' ' . $cours['enseignant_prenom']) ?></h5>
+                                        <p class="mb-0"><i class="fas fa-envelope"></i> <?= htmlspecialchars($cours['enseignant_email']) ?></p>
+                                    </div>
+                                </div>
+                            <?php else: ?>
+                                <div class="alert alert-warning mb-0">
+                                    <i class="fas fa-exclamation-triangle"></i> Aucun enseignant n'est assigné à ce cours.
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-dark text-white">
+            <h5 class="card-title mb-0"><i class="fas fa-list"></i> Liste des Étudiants Inscrits (<?= count($etudiants) ?>)</h5>
+        </div>
+        <div class="card-body">
+            <?php if (empty($etudiants)): ?>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Aucun étudiant n'est inscrit à ce cours.
+                </div>
+            <?php else: ?>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover data-table">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Matricule</th>
+                                <th>Nom</th>
+                                <th>Prénom</th>
+                                <th>Email</th>
+                                <th>Présences</th>
+                                <th>Absences</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($etudiants as $etudiant): ?>
+                                <?php 
+                                    $total_absences = $etudiant['absences_non_justifiees'] + $etudiant['absences_justifiees'];
+                                    $statut_classe = $etudiant['absences_non_justifiees'] >= 3 ? 'danger' : 'success';
+                                    $statut_texte = $etudiant['absences_non_justifiees'] >= 3 ? 'Exclu du CC' : 'Autorisé';
+                                ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($etudiant['matricule']) ?></td>
+                                    <td><?= htmlspecialchars($etudiant['nom']) ?></td>
+                                    <td><?= htmlspecialchars($etudiant['prenom']) ?></td>
+                                    <td><?= htmlspecialchars($etudiant['email']) ?></td>
+                                    <td>
+                                        <span class="badge bg-success"><?= $etudiant['nb_presences'] ?></span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-danger"><?= $etudiant['absences_non_justifiees'] ?></span>
+                                        <span class="badge bg-warning"><?= $etudiant['absences_justifiees'] ?></span>
+                                        <small class="text-muted">(<?= $total_absences ?> total)</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-<?= $statut_classe ?>"><?= $statut_texte ?></span>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="mt-3">
+                    <div class="badge-legend">
+                        <span class="badge bg-success">Présences</span>
+                        <span class="badge bg-danger">Absences non justifiées</span>
+                        <span class="badge bg-warning">Absences justifiées</span>
+                    </div>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
+
+<?php
+// Inclure le footer
+include 'includes/footer.php';
+?>

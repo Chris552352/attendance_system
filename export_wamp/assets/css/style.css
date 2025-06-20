@@ -1,0 +1,83 @@
+/* 
+   Système de Gestion de Présence
+   Fichier CSS principal
+   Version: 1.0
+   Date: Mai 2025
+*/
+
+/* Importation des modules CSS */
+@import url('modules/base.css');
+@import url('modules/layout.css');
+@import url('modules/components.css');
+@import url('modules/forms.css');
+@import url('modules/alerts.css');
+@import url('modules/login.css');
+@import url('modules/dashboard.css');
+@import url('modules/utilities.css');
+@import url('modules/theme-blue.css');
+@import url('modules/presence.css');
+
+/* Styles spécifiques supplémentaires */
+.header-logo {
+    max-height: 60px;
+    margin-right: 20px;
+}
+
+/* Icônes personnalisées */
+.icon {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+/* Animation de chargement */
+.loader {
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid var(--couleur-primaire);
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Print styles - pour les impressions de rapports */
+@media print {
+    .sidebar, .navbar, .footer, .actions, button {
+        display: none !important;
+    }
+    
+    .content {
+        margin-left: 0;
+        padding: 0;
+        box-shadow: none;
+    }
+    
+    table {
+        border: 1px solid #ddd;
+    }
+    
+    body {
+        background: none;
+        font-size: 12pt;
+    }
+    
+    .print-header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    
+    .print-footer {
+        text-align: center;
+        margin-top: 30px;
+        font-size: 10pt;
+        color: #666;
+    }
+}

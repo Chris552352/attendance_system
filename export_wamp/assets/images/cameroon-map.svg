@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="300" height="300" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fond transparent -->
+  <rect width="300" height="300" fill="none"/>
+  
+  <!-- Forme approximative du Cameroun -->
+  <path d="M150,50 C180,60 210,60 230,80 C250,100 270,130 260,160 C250,190 240,210 220,220 C200,230 190,250 170,260 C150,270 130,240 110,230 C90,220 70,210 60,190 C50,170 40,150 50,130 C60,110 80,100 100,80 C120,60 130,45 150,50 Z" 
+        fill="#1a75ff" fill-opacity="0.2" stroke="#084298" stroke-width="2"/>
+  
+  <!-- Étoile du drapeau camerounais -->
+  <polygon points="150,130 160,150 180,150 165,165 170,185 150,175 130,185 135,165 120,150 140,150" 
+           fill="#fcd116" stroke="#ce1126" stroke-width="1"/>
+  
+  <!-- Points représentant les principales villes -->
+  <circle cx="150" cy="130" r="5" fill="#ce1126"/> <!-- Yaoundé (capitale) -->
+  <text x="160" y="130" font-size="10" fill="#333">Yaoundé</text>
+  
+  <circle cx="110" cy="90" r="4" fill="#ce1126"/> <!-- Douala -->
+  <text x="115" y="85" font-size="8" fill="#333">Douala</text>
+  
+  <circle cx="210" cy="150" r="3" fill="#ce1126"/> <!-- Maroua -->
+  <text x="215" y="150" font-size="8" fill="#333">Maroua</text>
+  
+  <circle cx="100" cy="160" r="3" fill="#ce1126"/> <!-- Bafoussam -->
+  <text x="105" y="160" font-size="8" fill="#333">Bafoussam</text>
+  
+  <circle cx="170" cy="200" r="3" fill="#ce1126"/> <!-- Ebolowa -->
+  <text x="175" y="200" font-size="8" fill="#333">Ebolowa</text>
+  
+  <!-- Rivières stylisées -->
+  <path d="M90,120 Q120,140 150,130 Q180,120 210,130" fill="none" stroke="#0dcaf0" stroke-width="1" stroke-dasharray="1,1"/>
+  <path d="M120,200 Q140,180 160,190 Q180,200 200,180" fill="none" stroke="#0dcaf0" stroke-width="1" stroke-dasharray="1,1"/>
+  
+  <!-- Titre -->
+  <text x="150" y="40" font-size="12" font-weight="bold" text-anchor="middle" fill="#084298">RÉPUBLIQUE DU CAMEROUN</text>
+  <text x="150" y="260" font-size="10" font-style="italic" text-anchor="middle" fill="#084298">Afrique en miniature</text>
+</svg>

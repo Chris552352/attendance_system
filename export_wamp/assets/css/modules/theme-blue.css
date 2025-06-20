@@ -1,0 +1,70 @@
+/* Thème bleu pour le système de gestion de présence */
+
+:root {
+    --couleur-primaire: #1a75ff; /* Bleu vif */
+    --couleur-secondaire: #084298; /* Bleu foncé */
+    --couleur-accent: #ce1126; /* Rouge, comme dans le drapeau camerounais */
+    --couleur-texte: #333;
+    --couleur-fond: #f7f7f9;
+    --couleur-succes: #2D936C;
+    --couleur-danger: #BF0603;
+    --couleur-avertissement: #F3C302; /* Jaune, comme dans le drapeau camerounais */
+    --couleur-info: #0dcaf0; /* Bleu ciel */
+    --couleur-fond-clair: #ecf0f1;
+}
+
+/* Éléments avec couleur primaire */
+.navbar,
+.sidebar,
+.card-header,
+th {
+    background-color: var(--couleur-primaire);
+}
+
+/* Éléments avec couleur secondaire */
+label,
+h1, h2, h3, h4, h5, h6 {
+    color: var(--couleur-secondaire);
+}
+
+/* Éléments avec couleur d'accent */
+.btn-primary,
+.stat-value,
+.stat-number {
+    background-color: var(--couleur-accent);
+    color: white;
+}
+
+/* Bordures et décorations */
+.sidebar a.active,
+.sidebar a:hover {
+    border-left-color: var(--couleur-avertissement);
+}
+
+.card-header,
+.dashboard-header {
+    border-bottom-color: var(--couleur-avertissement);
+}
+
+.stat-card {
+    border-top-color: var(--couleur-primaire);
+}
+
+/* Surcharge des classes Bootstrap */
+.btn-primary {
+    background-color: var(--couleur-primaire) !important;
+    border-color: var(--couleur-secondaire) !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: var(--couleur-secondaire) !important;
+}
+
+.bg-primary {
+    background-color: var(--couleur-primaire) !important;
+}
+
+.text-primary {
+    color: var(--couleur-primaire) !important;
+}

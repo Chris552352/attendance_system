@@ -1,0 +1,89 @@
+/* Base styles pour le système de gestion de présence */
+
+:root {
+    --couleur-primaire: #1a75ff; /* Bleu vif */
+    --couleur-secondaire: #084298; /* Bleu foncé */
+    --couleur-accent: #ce1126; /* Rouge, comme dans le drapeau camerounais */
+    --couleur-texte: #333;
+    --couleur-fond: #f7f7f9;
+    --couleur-succes: #2D936C;
+    --couleur-danger: #BF0603;
+    --couleur-avertissement: #F3C302; /* Jaune, comme dans le drapeau camerounais */
+    --couleur-info: #0dcaf0; /* Bleu ciel */
+    --couleur-fond-clair: #ecf0f1;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: var(--couleur-texte);
+    background-color: var(--couleur-fond);
+    margin: 0;
+    padding: 0;
+    background-image: url('../images/cameroon-pattern.svg');
+    background-repeat: repeat;
+    background-size: 400px 400px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    color: var(--couleur-primaire);
+}
+
+a {
+    color: var(--couleur-accent);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+a:hover {
+    color: #a61e1e;
+}
+
+.container {
+    width: 95%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+/* Flag camerounais pour la décoration */
+.flag-decoration {
+    position: relative;
+    height: 30px;
+    margin: 20px 0;
+    overflow: hidden;
+    border-radius: 4px;
+}
+
+.flag-decoration:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 33.33%;
+    height: 100%;
+    background-color: #007a5e; /* Green */
+}
+
+.flag-decoration:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 33.33%;
+    height: 100%;
+    background-color: #ce1126; /* Red */
+}
+
+/* Étoile du drapeau */
+.flag-star {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #fcd116; /* Yellow */
+    font-size: 18px;
+}

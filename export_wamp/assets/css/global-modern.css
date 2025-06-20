@@ -1,0 +1,201 @@
+/* CSS global ultra-moderne pour toutes les pages sauf accueil */
+body {
+  background: linear-gradient(135deg,#f3e5f5 0%,#fff 100%);
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  color: #3a2256;
+  min-height: 100vh;
+  margin: 0;
+}
+
+/* Thèmes de couleurs par page principale */
+.theme-etudiants {
+  --main-gradient: linear-gradient(90deg,#ab47bc 30%,#6a1b9a 100%);
+  --main-color: #ab47bc;
+  --accent: #f3e5f5;
+  --shadow: #ab47bc22;
+}
+.theme-enseignants {
+  --main-gradient: linear-gradient(90deg,#ff9800 30%,#d84315 100%);
+  --main-color: #ff9800;
+  --accent: #ffe0b2;
+  --shadow: #ff980022;
+}
+.theme-cours {
+  --main-gradient: linear-gradient(90deg,#1976d2 30%,#43a047 100%);
+  --main-color: #1976d2;
+  --accent: #bbdefb;
+  --shadow: #1976d222;
+}
+.theme-presence {
+  --main-gradient: linear-gradient(90deg,#43a047 30%,#fbc02d 100%);
+  --main-color: #43a047;
+  --accent: #e6ee9c;
+  --shadow: #43a04722;
+}
+.theme-rapports {
+  --main-gradient: linear-gradient(90deg,#283593 30%,#1976d2 100%);
+  --main-color: #283593;
+  --accent: #c5cae9;
+  --shadow: #28359322;
+}
+
+/* Application des couleurs variables */
+.page-hero, .modern-card, .modern-table, .modern-alert {
+  background: var(--accent, rgba(255,255,255,0.7));
+  box-shadow: 0 4px 24px var(--shadow, #ab47bc22);
+}
+.page-hero-title, .modern-table th, .modern-alert {
+  color: var(--main-color, #6a1b9a) !important;
+}
+.modern-btn, .btn-modern {
+  background: var(--main-gradient, linear-gradient(90deg,#ab47bc 30%,#6a1b9a 100%));
+  color: #fff;
+  box-shadow: 0 2px 10px var(--shadow, #ab47bc22);
+}
+.modern-btn:hover, .btn-modern:hover {
+  background: var(--main-gradient, linear-gradient(90deg,#6a1b9a 10%,#ab47bc 90%));
+  box-shadow: 0 4px 18px var(--shadow, #ab47bc44);
+}
+.modern-table th {
+  background: var(--accent, #f3e5f5);
+}
+
+
+.page-hero {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  background: rgba(255,255,255,0.7);
+  box-shadow: 0 4px 24px #ab47bc22;
+  border-radius: 1.2rem;
+  padding: 1.1rem 2rem 1rem 2rem;
+  margin: 24px 0 32px 0;
+  position: relative;
+  overflow: hidden;
+  animation: fadeInDown 0.9s cubic-bezier(.42,0,.58,1);
+}
+.page-hero-img {
+  height: 60px;
+  width: auto;
+  border-radius: 1.2rem;
+  box-shadow: 0 2px 12px #ab47bc33;
+  background: #fff;
+  object-fit: cover;
+}
+.page-hero-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #6a1b9a;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin: 0;
+}
+
+.modern-btn, .btn-modern {
+  border: none;
+  border-radius: 2rem;
+  background: linear-gradient(90deg,#ab47bc 30%,#6a1b9a 100%);
+  color: #fff;
+  font-weight: 600;
+  font-size: 1.04rem;
+  padding: 0.6rem 1.35rem;
+  box-shadow: 0 2px 10px #ab47bc22;
+  transition: background 0.18s, box-shadow 0.18s, transform 0.18s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+.modern-btn:hover, .btn-modern:hover {
+  background: linear-gradient(90deg,#6a1b9a 10%,#ab47bc 90%);
+  color: #fff;
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 4px 18px #ab47bc44;
+}
+
+.modern-table {
+  width: 100%;
+  border-radius: 1.1rem;
+  background: rgba(255,255,255,0.7);
+  box-shadow: 0 2px 12px #ab47bc22;
+  overflow: hidden;
+  margin-bottom: 2rem;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.modern-table th, .modern-table td {
+  padding: 0.7rem 1.1rem;
+  text-align: left;
+  border-bottom: 1px solid #e1bee7;
+}
+.modern-table th {
+  background: #f3e5f5;
+  color: #6a1b9a;
+  font-weight: 700;
+  font-size: 1.02rem;
+}
+.modern-table tr:last-child td {
+  border-bottom: none;
+}
+
+.modern-card {
+  background: rgba(255,255,255,0.8);
+  border-radius: 1.2rem;
+  box-shadow: 0 2px 12px #ab47bc22;
+  padding: 1rem 1.3rem 1rem 1.3rem;
+  margin-bottom: 1.5rem;
+  animation: fadeInUp 1s cubic-bezier(.42,0,.58,1);
+}
+
+.modern-form input, .modern-form select, .modern-form textarea {
+  border-radius: 1.2rem;
+  border: 1.5px solid #ab47bc44;
+  padding: 0.5rem 1rem;
+  font-size: 1.04rem;
+  margin-bottom: 1rem;
+  width: 100%;
+  background: #f8f6fa;
+  transition: border 0.18s, box-shadow 0.18s;
+}
+.modern-form input:focus, .modern-form select:focus, .modern-form textarea:focus {
+  border: 1.5px solid #6a1b9a;
+  box-shadow: 0 2px 12px #ab47bc33;
+  outline: none;
+}
+
+.modern-alert {
+  background: linear-gradient(90deg,#ab47bc22 0%,#fff 100%);
+  color: #6a1b9a;
+  border-radius: 1.2rem;
+  padding: 0.9rem 1.2rem;
+  box-shadow: 0 2px 8px #ab47bc22;
+  margin-bottom: 1.2rem;
+  font-size: 1.01rem;
+}
+
+/* Images décoratives génériques */
+.page-hero-bg {
+  position: absolute;
+  right: 0; top: 0;
+  height: 100%;
+  max-width: 40vw;
+  opacity: 0.08;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@media (max-width: 900px) {
+  .page-hero { flex-direction: column; gap: 0.7rem; padding: 1rem 0.7rem; }
+  .page-hero-img { height: 36px; }
+  .page-hero-title { font-size: 1.08rem; }
+}
+@media (max-width: 600px) {
+  .modern-table th, .modern-table td { padding: 0.5rem 0.4rem; }
+  .page-hero { gap: 0.3rem; padding: 0.7rem 0.3rem; }
+  .page-hero-img { height: 22px; }
+}
+
+@keyframes fadeInDown { from { opacity: 0; transform: translateY(-22px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: translateY(0); } }

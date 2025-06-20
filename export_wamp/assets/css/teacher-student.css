@@ -1,0 +1,99 @@
+/* Styles pour l'affichage des enseignants et des u00e9tudiants */
+
+/* Avatar de l'enseignant */
+.teacher-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #007bff;
+}
+
+/* Carte d'information du cours */
+.course-info-card {
+    border-left: 4px solid #007bff;
+    transition: all 0.3s ease;
+}
+
+.course-info-card:hover {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Légende des badges */
+.badge-legend {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.badge-legend .badge {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+}
+
+/* Tableau des u00e9tudiants */
+.student-table th {
+    background-color: #343a40;
+    color: white;
+}
+
+.student-table tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+/* Statut des u00e9tudiants */
+.student-status {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.student-status .badge {
+    padding: 6px 10px;
+}
+
+/* Compteur de présences/absences */
+.attendance-counter {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.attendance-counter .badge {
+    min-width: 30px;
+    text-align: center;
+}
+
+/* Alerte d'information du cours */
+.course-date-alert {
+    background-color: rgba(0, 123, 255, 0.1);
+    border-left: 4px solid #007bff;
+    padding: 10px 15px;
+    margin-top: 15px;
+}
+
+/* Carte de l'enseignant */
+.teacher-card {
+    border: none;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.teacher-card .card-header {
+    border-radius: 6px 6px 0 0;
+}
+
+/* Informations de contact de l'enseignant */
+.teacher-contact {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 5px;
+    color: #6c757d;
+}
+
+.teacher-contact i {
+    color: #007bff;
+}

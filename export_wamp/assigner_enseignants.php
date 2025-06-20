@@ -1,0 +1,241 @@
+<?php
+/**
+ * Page d'assignation des enseignants aux cours
+ */
+
+// Inclure les fichiers nécessaires
+require_once 'includes/auth.php';
+require_once 'config/database.php';
+
+// Vérifier l'authentification et les droits d'administrateur
+require_admin();
+
+// Traitement de l'assignation
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['assigner'])) {
+    $cours_id = isset($_POST['cours_id']) ? (int)$_POST['cours_id'] : 0;
+    $enseignant_id = isset($_POST['enseignant_id']) ? (int)$_POST['enseignant_id'] : 0;
+    
+    if ($cours_id > 0 && $enseignant_id > 0) {
+        // Vérifier si le cours existe
+        $cours = db_query_single("SELECT * FROM cours WHERE id = ?", [$cours_id]);
+        
+        if ($cours) {
+            // Vérifier si l'enseignant existe
+            $enseignant = db_query_single("SELECT * FROM utilisateurs WHERE id = ? AND role = 'enseignant'", [$enseignant_id]);
+            
+            if ($enseignant) {
+                // Mettre u00e0 jour le cours avec le nouvel enseignant
+                if (db_exec("UPDATE cours SET enseignant_id = ? WHERE id = ?", [$enseignant_id, $cours_id])) {
+                    alerte("L'enseignant a u00e9té assigné au cours avec succès.", "success");
+                } else {
+                    alerte("Erreur lors de l'assignation de l'enseignant au cours.", "danger");
+                }
+            } else {
+                alerte("Enseignant introuvable.", "danger");
+            }
+        } else {
+            alerte("Cours introuvable.", "danger");
+        }
+    } else {
+        alerte("Veuillez sélectionner un cours et un enseignant.", "warning");
+    }
+}
+
+// Récupérer la liste des cours sans enseignant
+$cours_sans_enseignant = db_query("
+    SELECT c.*, 
+           COUNT(DISTINCT i.etudiant_id) as nb_etudiants
+    FROM cours c
+    LEFT JOIN inscriptions i ON c.id = i.cours_id
+    WHERE c.enseignant_id IS NULL
+    GROUP BY c.id
+    ORDER BY c.nom
+");
+
+// Récupérer la liste des cours avec enseignant
+$cours_avec_enseignant = db_query("
+    SELECT c.*, 
+           u.nom as enseignant_nom, 
+           u.prenom as enseignant_prenom,
+           u.email as enseignant_email,
+           COUNT(DISTINCT i.etudiant_id) as nb_etudiants
+    FROM cours c
+    JOIN utilisateurs u ON c.enseignant_id = u.id
+    LEFT JOIN inscriptions i ON c.id = i.cours_id
+    GROUP BY c.id
+    ORDER BY c.nom
+");
+
+// Récupérer la liste des enseignants
+$enseignants = db_query("SELECT id, nom, prenom, email FROM utilisateurs WHERE role = 'enseignant' ORDER BY nom, prenom");
+
+// Inclure le header
+include 'includes/header.php';
+?>
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2"><i class="fas fa-chalkboard-teacher"></i> Assigner des Enseignants aux Cours</h1>
+        <div>
+            <a href="cours.php" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Retour aux cours
+            </a>
+        </div>
+    </div>
+    
+    <!-- Formulaire d'assignation -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0"><i class="fas fa-plus-circle"></i> Assigner un Enseignant u00e0 un Cours</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="" class="row g-3">
+                        <div class="col-md-5">
+                            <label for="cours_id" class="form-label">Cours <span class="text-danger">*</span></label>
+                            <select class="form-select" id="cours_id" name="cours_id" required>
+                                <option value="">-- Sélectionner un cours --</option>
+                                <optgroup label="Cours sans enseignant">
+                                    <?php foreach ($cours_sans_enseignant as $c): ?>
+                                        <option value="<?= $c['id'] ?>">
+                                            <?= htmlspecialchars($c['nom'] . ' (' . $c['code'] . ') - ' . $c['nb_etudiants'] . ' u00e9tudiants') ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </optgroup>
+                                <optgroup label="Cours avec enseignant">
+                                    <?php foreach ($cours_avec_enseignant as $c): ?>
+                                        <option value="<?= $c['id'] ?>">
+                                            <?= htmlspecialchars($c['nom'] . ' (' . $c['code'] . ') - ' . $c['enseignant_nom'] . ' ' . $c['enseignant_prenom']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <label for="enseignant_id" class="form-label">Enseignant <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <select class="form-select" id="enseignant_id" name="enseignant_id" required>
+                                    <option value="">-- Sélectionner un enseignant --</option>
+                                    <?php foreach ($enseignants as $e): ?>
+                                        <option value="<?= $e['id'] ?>">
+                                            <?= htmlspecialchars($e['nom'] . ' ' . $e['prenom'] . ' (' . $e['email'] . ')') ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <a href="ajouter_enseignant.php" class="btn btn-outline-primary" target="_blank" title="Ajouter un nouvel enseignant">
+                                    <i class="fas fa-plus"></i>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="submit" name="assigner" class="btn btn-primary d-block w-100">
+                                <i class="fas fa-save"></i> Assigner
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Liste des cours sans enseignant -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="card-title mb-0"><i class="fas fa-exclamation-triangle"></i> Cours sans Enseignant (<?= count($cours_sans_enseignant) ?>)</h5>
+                </div>
+                <div class="card-body">
+                    <?php if (empty($cours_sans_enseignant)): ?>
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i> Tous les cours ont un enseignant assigné.
+                        </div>
+                    <?php else: ?>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Nom du Cours</th>
+                                        <th>u00c9tudiants</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($cours_sans_enseignant as $c): ?>
+                                        <tr>
+                                            <td><?= htmlspecialchars($c['code']) ?></td>
+                                            <td><?= htmlspecialchars($c['nom']) ?></td>
+                                            <td><?= $c['nb_etudiants'] ?></td>
+                                            <td>
+                                                <a href="ajouter_cours.php?id=<?= $c['id'] ?>" class="btn btn-sm btn-outline-primary" title="Modifier">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Liste des cours avec enseignant -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0"><i class="fas fa-check-circle"></i> Cours avec Enseignant (<?= count($cours_avec_enseignant) ?>)</h5>
+                </div>
+                <div class="card-body">
+                    <?php if (empty($cours_avec_enseignant)): ?>
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i> Aucun cours n'a encore d'enseignant assigné.
+                        </div>
+                    <?php else: ?>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Nom du Cours</th>
+                                        <th>Enseignant</th>
+                                        <th>Email</th>
+                                        <th>u00c9tudiants</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($cours_avec_enseignant as $c): ?>
+                                        <tr>
+                                            <td><?= htmlspecialchars($c['code']) ?></td>
+                                            <td><?= htmlspecialchars($c['nom']) ?></td>
+                                            <td><?= htmlspecialchars($c['enseignant_nom'] . ' ' . $c['enseignant_prenom']) ?></td>
+                                            <td><?= htmlspecialchars($c['enseignant_email']) ?></td>
+                                            <td><?= $c['nb_etudiants'] ?></td>
+                                            <td>
+                                                <a href="ajouter_cours.php?id=<?= $c['id'] ?>" class="btn btn-sm btn-outline-primary" title="Modifier">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php
+// Inclure le footer
+include 'includes/footer.php';
+?>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300" fill="none">
+  <!-- Fond -->
+  <rect width="400" height="300" fill="#f8f9fa" rx="10" ry="10"/>
+  
+  <!-- En-tête de document -->
+  <rect x="50" y="30" width="300" height="40" rx="5" ry="5" fill="#343a40"/>
+  <rect x="60" y="40" width="180" height="20" rx="2" ry="2" fill="#ffffff" opacity="0.8"/>
+  
+  <!-- Lignes de document -->
+  <rect x="50" y="90" width="300" height="20" rx="3" ry="3" fill="#e9ecef"/>
+  <rect x="50" y="120" width="300" height="20" rx="3" ry="3" fill="#e9ecef"/>
+  <rect x="50" y="150" width="300" height="20" rx="3" ry="3" fill="#e9ecef"/>
+  <rect x="50" y="180" width="300" height="20" rx="3" ry="3" fill="#e9ecef"/>
+  <rect x="50" y="210" width="300" height="20" rx="3" ry="3" fill="#e9ecef"/>
+  
+  <!-- Badge Présent/Absent -->
+  <rect x="280" y="90" width="60" height="20" rx="10" ry="10" fill="#28a745"/>
+  <rect x="280" y="120" width="60" height="20" rx="10" ry="10" fill="#dc3545"/>
+  <rect x="280" y="150" width="60" height="20" rx="10" ry="10" fill="#28a745"/>
+  <rect x="280" y="180" width="60" height="20" rx="10" ry="10" fill="#28a745"/>
+  <rect x="280" y="210" width="60" height="20" rx="10" ry="10" fill="#dc3545"/>
+  
+  <!-- Icône de rapport -->
+  <circle cx="100" cy="240" r="25" fill="#007bff" opacity="0.8"/>
+  <rect x="90" y="230" width="20" height="25" rx="2" ry="2" fill="#ffffff"/>
+  <rect x="95" y="225" width="10" height="5" rx="1" ry="1" fill="#ffffff"/>
+  <line x1="95" y1="235" x2="105" y2="235" stroke="#007bff" stroke-width="2"/>
+  <line x1="95" y1="240" x2="105" y2="240" stroke="#007bff" stroke-width="2"/>
+  <line x1="95" y1="245" x2="105" y2="245" stroke="#007bff" stroke-width="2"/>
+  
+  <!-- Texte décoratif -->
+  <rect x="140" y="235" width="180" height="20" rx="2" ry="2" fill="#343a40" opacity="0.8"/>
+  <rect x="140" y="260" width="120" height="10" rx="2" ry="2" fill="#343a40" opacity="0.5"/>
+</svg>
