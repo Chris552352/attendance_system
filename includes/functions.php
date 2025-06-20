@@ -155,11 +155,11 @@ function stats_presence_globales() {
     $aujourd_hui = date('Y-m-d');
     
     // Présences aujourd'hui
-    $presences_auj = db_query("SELECT COUNT(*) as total FROM presences WHERE date = ? AND est_present = TRUE", [$aujourd_hui]);
+    $presences_auj = db_query("SELECT COUNT(*) as total FROM presences WHERE date_presence = ? AND statut = 'present'", [$aujourd_hui]);
     $present_auj = $presences_auj[0]['total'] ?? 0;
     
     // Absences aujourd'hui  
-    $absences_auj = db_query("SELECT COUNT(*) as total FROM presences WHERE date = ? AND est_present = FALSE", [$aujourd_hui]);
+    $absences_auj = db_query("SELECT COUNT(*) as total FROM presences WHERE date_presence = ? AND statut = 'absent'", [$aujourd_hui]);
     $absent_auj = $absences_auj[0]['total'] ?? 0;
     
     // Total étudiants
@@ -188,9 +188,9 @@ function stats_presence_globales() {
  */
 function donnees_graphique_presence($cours_id = null, $date_debut = null, $date_fin = null) {
     $params = [];
-    $sql = "SELECT date, 
-            SUM(CASE WHEN est_present = TRUE THEN 1 ELSE 0 END) as presents, 
-            SUM(CASE WHEN est_present = FALSE THEN 1 ELSE 0 END) as absents
+    $sql = "SELECT date_presence as date, 
+            SUM(CASE WHEN statut = 'present' THEN 1 ELSE 0 END) as presents, 
+            SUM(CASE WHEN statut = 'absent' THEN 1 ELSE 0 END) as absents
             FROM presences";
     
     $conditions = [];
@@ -201,12 +201,12 @@ function donnees_graphique_presence($cours_id = null, $date_debut = null, $date_
     }
     
     if ($date_debut) {
-        $conditions[] = "date >= ?";
+        $conditions[] = "date_presence >= ?";
         $params[] = $date_debut;
     }
     
     if ($date_fin) {
-        $conditions[] = "date <= ?";
+        $conditions[] = "date_presence <= ?";
         $params[] = $date_fin;
     }
     

@@ -81,6 +81,21 @@ CREATE TABLE `presences` (
   CONSTRAINT `presences_ibfk_3` FOREIGN KEY (`enregistre_par`) REFERENCES `utilisateurs` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Table: seances (pour les QR codes)
+CREATE TABLE `seances` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `nom_cours` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `enseignant_id` int(11) NOT NULL,
+  `token` varchar(255) COLLATE utf8mb4_unicode_ci UNIQUE NOT NULL,
+  `expiration` timestamp NOT NULL,
+  `date_creation` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `active` tinyint(1) DEFAULT '1',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `token` (`token`),
+  KEY `enseignant_id` (`enseignant_id`),
+  CONSTRAINT `seances_ibfk_1` FOREIGN KEY (`enseignant_id`) REFERENCES `utilisateurs` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Insert sample data
 INSERT INTO `utilisateurs` (`id`, `nom`, `prenom`, `email`, `mot_de_passe`, `role`) VALUES
 (1, 'Admin', 'Chris', 'chris552352@gmail.com', '$2y$10$/f3glrQ1ygJljOKN9s99L.OMvsaS/pnPVCDTKOQmfRPod7NZeT3dK', 'admin'),

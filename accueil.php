@@ -17,8 +17,8 @@ $stats = stats_presence_globales();
 $stats_query = db_query("
     SELECT 
         COUNT(*) as total_presences,
-        COALESCE(SUM(CASE WHEN est_present = TRUE THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 0) as taux_presence_global,
-        COUNT(*) * 1.0 / COUNT(DISTINCT date) as moyenne_presences_jour
+        COALESCE(SUM(CASE WHEN statut = 'present' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 0) as taux_presence_global,
+        COUNT(*) * 1.0 / COUNT(DISTINCT date_presence) as moyenne_presences_jour
     FROM presences
 ");
 
@@ -143,14 +143,14 @@ include 'includes/header.php';
                     <tbody>
                         <?php
                         $cours_populaires = db_query("
-                            SELECT c.id, c.nom, e.nom as enseignant_nom, 
+                            SELECT c.id, c.nom, u.nom as enseignant_nom, 
                             COUNT(DISTINCT i.etudiant_id) as nb_etudiants,
-                            COUNT(DISTINCT p.date) as nb_sessions
+                            COUNT(DISTINCT p.date_presence) as nb_sessions
                             FROM cours c 
-                            LEFT JOIN enseignants e ON c.enseignant_id = e.id
+                            LEFT JOIN utilisateurs u ON c.enseignant_id = u.id
                             LEFT JOIN inscriptions i ON c.id = i.cours_id
                             LEFT JOIN presences p ON c.id = p.cours_id
-                            GROUP BY c.id, c.nom, e.nom
+                            GROUP BY c.id, c.nom, u.nom
                             ORDER BY nb_etudiants DESC, nb_sessions DESC
                             LIMIT 5
                         ");
@@ -192,7 +192,7 @@ include 'includes/header.php';
                         $etudiants_assidus = db_query("
                             SELECT e.id, e.nom, e.prenom, e.matricule, 
                             COUNT(DISTINCT i.cours_id) as nb_cours,
-                            SUM(CASE WHEN p.est_present = TRUE THEN 1 ELSE 0 END) as nb_presences
+                            SUM(CASE WHEN p.statut = 'present' THEN 1 ELSE 0 END) as nb_presences
                             FROM etudiants e
                             LEFT JOIN inscriptions i ON e.id = i.etudiant_id
                             LEFT JOIN presences p ON e.id = p.etudiant_id
