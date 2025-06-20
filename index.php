@@ -57,6 +57,9 @@ include 'includes/header_public.php';
                                     <a href="login_etudiant.php" class="btn btn-primary">
                                         <i class="fas fa-sign-in-alt"></i> Se connecter
                                     </a>
+                                    <a href="inscription_etudiant.php" class="btn btn-success mt-2">
+                                        <i class="fas fa-user-plus"></i> Créer un compte
+                                    </a>
                                     <a href="justifier_absence.php" class="btn btn-outline-primary mt-2">
                                         <i class="fas fa-clipboard-check"></i> Justifier une absence
                                     </a>
