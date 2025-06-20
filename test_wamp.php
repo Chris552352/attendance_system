@@ -188,15 +188,34 @@ ini_set('display_errors', 1);
         // URLs de test
         echo "<h2>🔗 URLs de Test</h2>";
         echo "<div class='info'>";
-        echo "<strong>Accès local:</strong><br>";
+        echo "<strong>Accès local (PC):</strong><br>";
         echo "• <a href='http://localhost/attendance_system/' target='_blank'>http://localhost/attendance_system/</a><br><br>";
         
         if (!empty($localIPs)) {
-            echo "<strong>Accès réseau (pour les étudiants):</strong><br>";
+            echo "<strong>Accès mobile (scan QR codes):</strong><br>";
             foreach ($localIPs as $ip) {
                 echo "• <a href='http://$ip/attendance_system/' target='_blank'>http://$ip/attendance_system/</a><br>";
+                echo "• <a href='http://$ip/attendance_system/inscription_etudiant.php' target='_blank'>Inscription étudiant</a><br>";
+            }
+            echo "<br><strong>URLs pour QR codes:</strong><br>";
+            foreach ($localIPs as $ip) {
+                echo "• http://$ip/attendance_system/presence.php?seance=X&token=Y<br>";
             }
         }
+        echo "</div>";
+
+        // Configuration point d'accès
+        echo "<h2>📶 Configuration Point d'Accès</h2>";
+        echo "<div class='warning'>";
+        echo "<strong>Pour activer le point d'accès Wi-Fi (Windows):</strong><br>";
+        echo "1. Paramètres → Réseau et Internet → Point d'accès mobile<br>";
+        echo "2. Activer le partage de connexion<br>";
+        echo "3. IP généralement: 192.168.137.1<br>";
+        echo "4. Connecter les téléphones au réseau créé<br><br>";
+        echo "<strong>Pour autoriser l'accès réseau WAMP:</strong><br>";
+        echo "1. Clic droit icône WAMP → Apache → httpd.conf<br>";
+        echo "2. Remplacer 'Require local' par 'Require all granted'<br>";
+        echo "3. Redémarrer tous les services WAMP<br>";
         echo "</div>";
 
         // Comptes de test
