@@ -1,0 +1,36 @@
+<?php
+/**
+ * Script pour cru00e9er la table justifications directement
+ */
+
+require_once 'config/database.php';
+
+// Cru00e9er la table justifications
+$sql = "CREATE TABLE IF NOT EXISTS justifications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    presence_id INT NOT NULL,
+    contenu TEXT NOT NULL,
+    date_soumission DATETIME DEFAULT CURRENT_TIMESTAMP,
+    statut ENUM('en_attente', 'validee', 'rejetee') DEFAULT 'en_attente',
+    validee_par INT NULL,
+    date_validation DATETIME NULL,
+    commentaire TEXT NULL,
+    FOREIGN KEY (presence_id) REFERENCES presences(id) ON DELETE CASCADE
+)";
+
+$result = db_exec($sql);
+
+if ($result) {
+    echo "<div style='background-color: #d4edda; color: #155724; padding: 15px; border-radius: 5px; margin: 20px;'>";
+    echo "<h3>La table 'justifications' a u00e9tu00e9 cru00e9u00e9e avec succu00e8s.</h3>";
+    echo "<p>Vous pouvez maintenant utiliser le nouveau systu00e8me de justification d'absences.</p>";
+    echo "<a href='justifier_absence.php' style='display: inline-block; background-color: #28a745; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px; margin-top: 10px;'>Tester la page de justification</a>";
+    echo "</div>";
+} else {
+    echo "<div style='background-color: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; margin: 20px;'>";
+    echo "<h3>Erreur lors de la cru00e9ation de la table 'justifications'.</h3>";
+    echo "<p>" . db_error() . "</p>";
+    echo "<a href='index.php' style='display: inline-block; background-color: #dc3545; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px; margin-top: 10px;'>Retour u00e0 l'accueil</a>";
+    echo "</div>";
+}
+?>

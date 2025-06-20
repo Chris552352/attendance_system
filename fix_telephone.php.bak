@@ -1,0 +1,81 @@
+<?php
+/**
+ * Script pour corriger les problu00e8mes liu00e9s u00e0 l'affichage du tu00e9lu00e9phone
+ */
+
+// Inclure les fichiers nu00e9cessaires
+require_once 'config/database.php';
+
+// Vu00e9rifier si la colonne tu00e9lu00e9phone existe
+$check_telephone = db_query("SHOW COLUMNS FROM etudiants LIKE 'telephone'");
+
+if (empty($check_telephone)) {
+    // La colonne n'existe pas, on la cru00e9e
+    echo "<p>La colonne tu00e9lu00e9phone n'existe pas dans la table etudiants. Cru00e9ation en cours...</p>";
+    
+    $sql = "ALTER TABLE etudiants ADD COLUMN telephone VARCHAR(20) NULL AFTER email";
+    
+    if (db_exec($sql)) {
+        echo "<p style='color: green;'>Colonne tu00e9lu00e9phone ajoutu00e9e avec succu00e8s.</p>";
+    } else {
+        echo "<p style='color: red;'>Erreur lors de l'ajout de la colonne tu00e9lu00e9phone: " . db_error() . "</p>";
+    }
+} else {
+    echo "<p>La colonne tu00e9lu00e9phone existe du00e9ju00e0 dans la table etudiants.</p>";
+}
+
+// Vu00e9rifier les donnu00e9es des u00e9tudiants
+echo "<h2>Vu00e9rification des donnu00e9es des u00e9tudiants</h2>";
+
+$etudiants = db_query("SELECT id, nom, prenom, email, telephone FROM etudiants LIMIT 10");
+
+echo "<table border='1' cellpadding='5'>";
+echo "<tr><th>ID</th><th>Nom</th><th>Pru00e9nom</th><th>Email</th><th>Tu00e9lu00e9phone</th><th>Tu00e9lu00e9phone existe</th></tr>";
+
+foreach ($etudiants as $etudiant) {
+    echo "<tr>";
+    echo "<td>{$etudiant['id']}</td>";
+    echo "<td>{$etudiant['nom']}</td>";
+    echo "<td>{$etudiant['prenom']}</td>";
+    echo "<td>{$etudiant['email']}</td>";
+    echo "<td>" . (isset($etudiant['telephone']) ? htmlspecialchars($etudiant['telephone']) : 'NULL') . "</td>";
+    echo "<td>" . (array_key_exists('telephone', $etudiant) ? 'Oui' : 'Non') . "</td>";
+    echo "</tr>";
+}
+
+echo "</table>";
+
+// Corriger les valeurs NULL pour le tu00e9lu00e9phone
+echo "<h2>Correction des valeurs NULL pour le tu00e9lu00e9phone</h2>";
+
+$sql = "UPDATE etudiants SET telephone = '' WHERE telephone IS NULL";
+
+if (db_exec($sql)) {
+    echo "<p style='color: green;'>Les valeurs NULL pour le tu00e9lu00e9phone ont u00e9tu00e9 remplacu00e9es par des chau00eenes vides.</p>";
+} else {
+    echo "<p style='color: red;'>Erreur lors de la mise u00e0 jour des valeurs NULL pour le tu00e9lu00e9phone: " . db_error() . "</p>";
+}
+
+// Vu00e9rifier u00e0 nouveau les donnu00e9es des u00e9tudiants apru00e8s correction
+echo "<h2>Vu00e9rification des donnu00e9es des u00e9tudiants apru00e8s correction</h2>";
+
+$etudiants = db_query("SELECT id, nom, prenom, email, telephone FROM etudiants LIMIT 10");
+
+echo "<table border='1' cellpadding='5'>";
+echo "<tr><th>ID</th><th>Nom</th><th>Pru00e9nom</th><th>Email</th><th>Tu00e9lu00e9phone</th><th>Tu00e9lu00e9phone existe</th></tr>";
+
+foreach ($etudiants as $etudiant) {
+    echo "<tr>";
+    echo "<td>{$etudiant['id']}</td>";
+    echo "<td>{$etudiant['nom']}</td>";
+    echo "<td>{$etudiant['prenom']}</td>";
+    echo "<td>{$etudiant['email']}</td>";
+    echo "<td>" . (isset($etudiant['telephone']) ? htmlspecialchars($etudiant['telephone']) : 'NULL') . "</td>";
+    echo "<td>" . (array_key_exists('telephone', $etudiant) ? 'Oui' : 'Non') . "</td>";
+    echo "</tr>";
+}
+
+echo "</table>";
+
+echo "<p><a href='etudiants.php' class='btn btn-primary'>Retour u00e0 la liste des u00e9tudiants</a></p>";
+?>

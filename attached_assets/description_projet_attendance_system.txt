@@ -1,0 +1,105 @@
+
+Projet : Student Attendance Management System (Système de Gestion de Présence Étudiants)
+
+
+Développer une application web permettant aux enseignants de gérer la présence des étudiants par cours et par date, générer des rapports de présence et offrir un espace personnel pour chaque utilisateur.
+Utiliser les outils déjà disponibles dans le dossier vendor les icones et autres y ajouter le jquery losque nécessaire, INTÈGRE UN BON CSS
+on travaille avec WAMPSERVER 3.3.7 ,MYSQL 9.1.0, PHP 8.3.14
+Fonctionnalités principales :
+1. Page de Connexion :
+   - Champs : Email, Mot de passe
+   - Bouton : "Se connecter"
+   - Lien : "Mot de passe oublié ?"
+
+2. Tableau de Bord (Dashboard) :
+   - Sidebar fixe (gauche) avec sections : Dashboard, Étudiants, Cours, Marquer Présence, Rapports, Profil, Déconnexion
+   - 4 Cartes statistiques (Présence aujourd'hui, Absences, Nombre d'étudiants, Nombre de cours)
+   - Graphique d'analyse de présence (chart)
+
+3. Gestion des Étudiants :
+   - Liste des étudiants avec colonnes : Nom, Matricule, Email, Cours, Action (Modifier/Supprimer)
+   - Bouton "Ajouter étudiant"
+
+4. Gestion des Cours :
+   - Liste des cours : Nom du cours, Code, Enseignant
+   - Bouton "Ajouter cours"
+
+5. Marquer la Présence :
+   - Sélectionner un cours et une date
+   - Liste des étudiants avec choix Présent / Absent pour chacun
+   - Bouton "Enregistrer la présence"
+
+6. Rapports de Présence :
+   - Filtres par étudiant, cours, date
+   - Graphique circulaire de présence vs absences
+   - Bouton "Exporter en PDF"
+
+7. Profil Utilisateur :
+   - Informations affichées : Nom, Email, Rôle
+   - Boutons : "Modifier Profil" et "Changer mot de passe"
+
+Technologies à utiliser :
+- Frontend (Interface) : HTML5, CSS3, JavaScript 
+- CSS Framework : Bootstrap 5
+- JS Framework (option) : jQuery 
+- Backend (Serveur) : PHP 8 
+- Base de données : MySQL
+- Graphiques : Chart.js
+- Autres outils : PHPMyAdmin
+
+Résumé final :
+- Frontend : HTML + CSS + Bootstrap + JavaScript (jQuery )
+- Backend : PHP
+- Base de données : MySQL
+- Graphiques : Chart.js
+- Autres outils : PhpMyAdmin
+
+n'utiliser rien que les technologie demander sans plus sans rien ajouter 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+EN GROS ON AURA 12 PAGES PAS PLUS	
+
+1	Login (login.php)	Connexion utilisateur (admin ou étudiant)
+2	Dashboard (dashboard.php)	Statistiques + vue globale
+3	Students (students.php)	Liste + gestion des étudiants
+4	Add Student (add_student.php)	(Optionnel) Formulaire pour ajouter un étudiant
+5	Courses (courses.php)	Liste + gestion des cours
+6	Add Course (add_course.php)	(Optionnel) Formulaire pour ajouter un cours
+7	Mark Attendance (attendance.php)	Marquer la présence d'un étudiant
+8	Reports (reports.php)	Voir les présences/absences sous forme graphique
+9	Profile (profile.php)	Voir/modifier ses infos personnelles
+10	Change Password (change_password.php)	(Optionnel) Changer son mot de passe
+11	Logout (logout.php)	Déconnexion propre
+12	Index (index.php)	Redirection intelligente login/dashboard
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

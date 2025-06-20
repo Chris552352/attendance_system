@@ -1,0 +1,163 @@
+<?php
+/**
+ * Script pour vérifier la structure de la base de données
+ */
+
+// Inclure les fichiers nécessaires
+require_once 'config/database.php';
+
+// Afficher l'en-tête
+echo "<h1>Vérification de la structure de la base de données</h1>";
+
+// Vérifier la table utilisateurs
+echo "<h2>Table utilisateurs</h2>";
+$utilisateurs_structure = db_query("DESCRIBE utilisateurs");
+echo "<h3>Structure:</h3>";
+echo "<pre>";
+print_r($utilisateurs_structure);
+echo "</pre>";
+
+// Afficher quelques utilisateurs
+echo "<h3>Exemples d'utilisateurs:</h3>";
+$utilisateurs = db_query("SELECT * FROM utilisateurs LIMIT 5");
+echo "<pre>";
+print_r($utilisateurs);
+echo "</pre>";
+
+// Compter les enseignants
+$enseignants_count = db_query_single("SELECT COUNT(*) as total FROM utilisateurs WHERE role = 'enseignant'");
+echo "<p>Nombre d'enseignants: " . ($enseignants_count ? $enseignants_count['total'] : '0') . "</p>";
+
+// Vérifier la table cours
+echo "<h2>Table cours</h2>";
+$cours_structure = db_query("DESCRIBE cours");
+echo "<h3>Structure:</h3>";
+echo "<pre>";
+print_r($cours_structure);
+echo "</pre>";
+
+// Afficher quelques cours
+echo "<h3>Exemples de cours:</h3>";
+$cours = db_query("SELECT * FROM cours LIMIT 5");
+echo "<pre>";
+print_r($cours);
+echo "</pre>";
+
+// Vérifier les cours assignés aux enseignants
+echo "<h3>Cours assignés aux enseignants:</h3>";
+$cours_enseignants = db_query("SELECT c.id, c.nom, c.code, u.id as enseignant_id, u.nom as enseignant_nom, u.prenom as enseignant_prenom 
+                              FROM cours c 
+                              LEFT JOIN utilisateurs u ON c.enseignant_id = u.id 
+                              ORDER BY u.nom, c.nom");
+echo "<pre>";
+print_r($cours_enseignants);
+echo "</pre>";
+
+// Vérifier la table inscriptions
+echo "<h2>Table inscriptions</h2>";
+$check_inscriptions = db_query("SHOW TABLES LIKE 'inscriptions'");
+if (empty($check_inscriptions)) {
+    echo "<p style='color: red;'>La table 'inscriptions' n'existe pas!</p>";
+    
+    // Créer la table inscriptions
+    echo "<h3>Création de la table inscriptions</h3>";
+    $sql_create = "CREATE TABLE IF NOT EXISTS inscriptions (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        etudiant_id INT NOT NULL,
+        cours_id INT NOT NULL,
+        date_inscription TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (etudiant_id) REFERENCES etudiants(id) ON DELETE CASCADE,
+        FOREIGN KEY (cours_id) REFERENCES cours(id) ON DELETE CASCADE,
+        UNIQUE KEY unique_inscription (etudiant_id, cours_id)
+    )";
+    $result = db_exec($sql_create);
+    echo $result ? "<p style='color: green;'>Table 'inscriptions' créu00e9e avec succès!</p>" : "<p style='color: red;'>Erreur lors de la création de la table 'inscriptions'.</p>";
+} else {
+    echo "<p style='color: green;'>La table 'inscriptions' existe.</p>";
+    
+    // Afficher la structure
+    $inscriptions_structure = db_query("DESCRIBE inscriptions");
+    echo "<h3>Structure:</h3>";
+    echo "<pre>";
+    print_r($inscriptions_structure);
+    echo "</pre>";
+    
+    // Afficher quelques inscriptions
+    echo "<h3>Exemples d'inscriptions:</h3>";
+    $inscriptions = db_query("SELECT * FROM inscriptions LIMIT 5");
+    echo "<pre>";
+    print_r($inscriptions);
+    echo "</pre>";
+}
+
+// Vérifier la table presences
+echo "<h2>Table presences</h2>";
+$presences_structure = db_query("DESCRIBE presences");
+echo "<h3>Structure:</h3>";
+echo "<pre>";
+print_r($presences_structure);
+echo "</pre>";
+
+// Afficher quelques présences
+echo "<h3>Exemples de présences:</h3>";
+$presences = db_query("SELECT * FROM presences LIMIT 5");
+echo "<pre>";
+print_r($presences);
+echo "</pre>";
+
+// Vérifier si la colonne 'statut' existe dans la table presences
+$has_statut = false;
+foreach ($presences_structure as $column) {
+    if ($column['Field'] === 'statut') {
+        $has_statut = true;
+        break;
+    }
+}
+
+if (!$has_statut) {
+    echo "<p style='color: red;'>La colonne 'statut' n'existe pas dans la table presences!</p>";
+    
+    // Vérifier si la colonne 'est_present' existe
+    $has_est_present = false;
+    foreach ($presences_structure as $column) {
+        if ($column['Field'] === 'est_present') {
+            $has_est_present = true;
+            break;
+        }
+    }
+    
+    if ($has_est_present) {
+        echo "<p>La colonne 'est_present' existe. Nous devons modifier la requête SQL pour l'utiliser.</p>";
+    }
+} else {
+    echo "<p style='color: green;'>La colonne 'statut' existe dans la table presences.</p>";
+}
+
+// Proposer des solutions
+echo "<h2>Solutions possibles</h2>";
+
+// Solution 1: Corriger la requête SQL dans mes_cours.php
+echo "<h3>1. Corriger la requête SQL dans mes_cours.php</h3>";
+echo "<p>Si la colonne 'statut' n'existe pas mais que 'est_present' existe, nous devons modifier la requête SQL.</p>";
+echo "<a href='fix_mes_cours.php?action=fix_query' class='btn btn-primary'>Corriger la requête SQL</a>";
+
+// Solution 2: Ajouter la colonne 'statut' u00e0 la table presences
+echo "<h3>2. Ajouter la colonne 'statut' u00e0 la table presences</h3>";
+echo "<p>Si la colonne 'statut' n'existe pas, nous pouvons l'ajouter et la remplir en fonction de 'est_present'.</p>";
+echo "<a href='fix_mes_cours.php?action=add_statut' class='btn btn-primary'>Ajouter la colonne 'statut'</a>";
+
+// Solution 3: Créer des inscriptions pour les cours
+echo "<h3>3. Créer des inscriptions pour les cours</h3>";
+echo "<p>Si la table 'inscriptions' est vide, nous pouvons créer des inscriptions pour les cours existants.</p>";
+echo "<a href='fix_mes_cours.php?action=create_inscriptions' class='btn btn-primary'>Créer des inscriptions</a>";
+
+// Créer le script fix_mes_cours.php avec les actions
+if (!file_exists('fix_mes_cours.php')) {
+    $fix_script = "<?php\n
+// Inclure les fichiers nécessaires\nrequire_once 'config/database.php';\n\n// Récupérer l'action\n\$action = \$_GET['action'] ?? '';\n\nswitch (\$action) {\n    case 'fix_query':\n        // Modifier mes_cours.php pour utiliser est_present au lieu de statut\n        \$file = 'mes_cours.php';\n        \$content = file_get_contents(\$file);\n        \n        // Vérifier si la colonne statut existe\n        \$presences_structure = db_query(\"DESCRIBE presences\");\n        \$has_statut = false;\n        \$has_est_present = false;\n        \n        foreach (\$presences_structure as \$column) {\n            if (\$column['Field'] === 'statut') {\n                \$has_statut = true;\n            }\n            if (\$column['Field'] === 'est_present') {\n                \$has_est_present = true;\n            }\n        }\n        \n        if (!\$has_statut && \$has_est_present) {\n            // Remplacer statut = 'present' par est_present = 1\n            \$content = str_replace(\"p.statut = 'present'\", \"p.est_present = 1\", \$content);\n            file_put_contents(\$file, \$content);\n            echo \"<h2>Correction de la requête SQL</h2>\";\n            echo \"<p style='color: green;'>La requête SQL a u00e9té corrigée pour utiliser 'est_present' au lieu de 'statut'.</p>\";\n        } else if (\$has_statut) {\n            echo \"<h2>Correction de la requête SQL</h2>\";\n            echo \"<p>La colonne 'statut' existe déjà dans la table presences. Aucune correction nécessaire.</p>\";\n        } else {\n            echo \"<h2>Correction de la requête SQL</h2>\";\n            echo \"<p style='color: red;'>Ni la colonne 'statut' ni la colonne 'est_present' n'existent dans la table presences.</p>\";\n        }\n        break;\n        \n    case 'add_statut':\n        // Ajouter la colonne statut u00e0 la table presences\n        \$presences_structure = db_query(\"DESCRIBE presences\");\n        \$has_statut = false;\n        \$has_est_present = false;\n        \n        foreach (\$presences_structure as \$column) {\n            if (\$column['Field'] === 'statut') {\n                \$has_statut = true;\n            }\n            if (\$column['Field'] === 'est_present') {\n                \$has_est_present = true;\n            }\n        }\n        \n        if (!\$has_statut) {\n            // Ajouter la colonne statut\n            \$result = db_exec(\"ALTER TABLE presences ADD COLUMN statut ENUM('present', 'absent') DEFAULT 'absent'\");\n            \n            if (\$result && \$has_est_present) {\n                // Mettre u00e0 jour les valeurs de statut en fonction de est_present\n                \$update_result = db_exec(\"UPDATE presences SET statut = CASE WHEN est_present = 1 THEN 'present' ELSE 'absent' END\");\n                echo \"<h2>Ajout de la colonne 'statut'</h2>\";\n                echo \"<p style='color: green;'>La colonne 'statut' a u00e9té ajoutée u00e0 la table presences et mise u00e0 jour avec les valeurs de 'est_present'.</p>\";\n            } else if (\$result) {\n                echo \"<h2>Ajout de la colonne 'statut'</h2>\";\n                echo \"<p style='color: green;'>La colonne 'statut' a u00e9té ajoutée u00e0 la table presences.</p>\";\n            } else {\n                echo \"<h2>Ajout de la colonne 'statut'</h2>\";\n                echo \"<p style='color: red;'>Erreur lors de l'ajout de la colonne 'statut' u00e0 la table presences.</p>\";\n            }\n        } else {\n            echo \"<h2>Ajout de la colonne 'statut'</h2>\";\n            echo \"<p>La colonne 'statut' existe déjà dans la table presences.</p>\";\n        }\n        break;\n        \n    case 'create_inscriptions':\n        // Créer des inscriptions pour les cours existants\n        \$check_inscriptions = db_query(\"SHOW TABLES LIKE 'inscriptions'\");\n        \n        if (empty(\$check_inscriptions)) {\n            // Créer la table inscriptions\n            \$sql_create = \"CREATE TABLE IF NOT EXISTS inscriptions (\n                id INT AUTO_INCREMENT PRIMARY KEY,\n                etudiant_id INT NOT NULL,\n                cours_id INT NOT NULL,\n                date_inscription TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n                FOREIGN KEY (etudiant_id) REFERENCES etudiants(id) ON DELETE CASCADE,\n                FOREIGN KEY (cours_id) REFERENCES cours(id) ON DELETE CASCADE,\n                UNIQUE KEY unique_inscription (etudiant_id, cours_id)\n            )\";\n            \$result = db_exec(\$sql_create);\n            \n            if (!\$result) {\n                echo \"<h2>Création des inscriptions</h2>\";\n                echo \"<p style='color: red;'>Erreur lors de la création de la table 'inscriptions'.</p>\";\n                break;\n            }\n        }\n        \n        // Récupérer tous les cours\n        \$cours = db_query(\"SELECT id FROM cours\");\n        \n        // Récupérer tous les u00e9tudiants\n        \$etudiants = db_query(\"SELECT id FROM etudiants\");\n        \n        if (empty(\$cours) || empty(\$etudiants)) {\n            echo \"<h2>Création des inscriptions</h2>\";\n            echo \"<p style='color: red;'>Aucun cours ou aucun u00e9tudiant trouvé.</p>\";\n            break;\n        }\n        \n        // Créer des inscriptions pour chaque cours avec quelques u00e9tudiants\n        \$count = 0;\n        foreach (\$cours as \$c) {\n            // Attribuer aleatoirement 5 a 15 etudiants a chaque cours\n            \$num_etudiants = rand(5, min(15, count(\$etudiants)));\n            \$etudiants_shuffle = \$etudiants;\n            shuffle(\$etudiants_shuffle);\n            \$etudiants_shuffle = array_slice(\$etudiants_shuffle, 0, \$num_etudiants);\n            \n            foreach (\$etudiants_shuffle as \$e) {\n                // Vérifier si l'inscription existe déjà\n                \$exists = db_query_single(\"SELECT id FROM inscriptions WHERE etudiant_id = ? AND cours_id = ?\", [\$e['id'], \$c['id']]);\n                \n                if (!\$exists) {\n                    \$result = db_exec(\"INSERT INTO inscriptions (etudiant_id, cours_id) VALUES (?, ?)\", [\$e['id'], \$c['id']]);\n                    if (\$result) {\n                        \$count++;\n                    }\n                }\n            }\n        }\n        \n        echo \"<h2>Création des inscriptions</h2>\";\n        echo \"<p style='color: green;'>\$count inscriptions ont u00e9té créu00e9es avec succès.</p>\";\n        break;\n        \n    default:\n        echo \"<h2>Action non reconnue</h2>\";\n        echo \"<p>Veuillez spécifier une action valide.</p>\";\n}\n\necho \"<p><a href='check_database.php'>Retour u00e0 la vérification de la base de données</a></p>\";\n\necho \"<p><a href='mes_cours.php'>Aller u00e0 Mes Cours</a></p>\";\n?>";\n\n    file_put_contents('fix_mes_cours.php', $fix_script);
+    echo "<p>Script de correction créu00e9: fix_mes_cours.php</p>";
+}
+
+// Afficher un lien pour revenir u00e0 mes_cours.php
+echo "<p><a href='mes_cours.php'>Retour u00e0 Mes Cours</a></p>";
+?>

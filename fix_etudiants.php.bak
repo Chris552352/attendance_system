@@ -1,0 +1,93 @@
+<?php
+/**
+ * Script pour corriger l'affichage des u00e9tudiants
+ */
+
+require_once 'config/database.php';
+
+// Afficher les erreurs pour le diagnostic
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+echo "<h1>Correction de la page des u00e9tudiants</h1>";
+
+// Vu00e9rifier si la redirection est trop rapide
+echo "<h2>1. Vu00e9rification de la redirection</h2>";
+
+$file = 'ajouter_etudiant.php';
+$content = file_get_contents($file);
+
+// Remplacer la redirection immu00e9diate par une redirection avec du00e9lai
+if (strpos($content, "header('Location: etudiants.php');") !== false) {
+    echo "<p>Redirection immu00e9diate du00e9tectu00e9e dans le fichier $file</p>";
+    
+    // Modification du fichier pour ajouter un du00e9lai
+    $content_modified = str_replace(
+        "// Redirection immu00e9diate pour u00e9viter d'afficher les donnu00e9es dans la liste\n                header('Location: etudiants.php');\n                exit();",
+        "// Redirection avec message de succu00e8s\n                alerte(\"L'u00e9tudiant a u00e9tu00e9 ajoutu00e9 avec succu00e8s.\", \"success\");\n                rediriger('etudiants.php');",
+        $content
+    );
+    
+    // Sauvegarder les modifications
+    if ($content_modified !== $content) {
+        file_put_contents($file, $content_modified);
+        echo "<p style='color:green'>Correction appliquu00e9e: Remplacement de la redirection immu00e9diate par une redirection standard.</p>";
+    } else {
+        echo "<p style='color:red'>Erreur: Impossible de modifier le fichier.</p>";
+    }
+} else {
+    echo "<p>Aucune redirection immu00e9diate du00e9tectu00e9e dans le fichier $file</p>";
+}
+
+// Corriger la requu00eate SQL dans etudiants.php
+echo "<h2>2. Correction de la requu00eate SQL dans etudiants.php</h2>";
+
+$file = 'etudiants.php';
+$content = file_get_contents($file);
+
+// Remplacer la requu00eate SQL pour afficher tous les u00e9tudiants
+if (strpos($content, "SELECT e.*\n    FROM etudiants e") !== false) {
+    echo "<p>Requu00eate SQL du00e9tectu00e9e dans le fichier $file</p>";
+    
+    // Modification du fichier pour ajouter un du00e9lai
+    $content_modified = str_replace(
+        "// Ru00e9cupu00e9rer la liste des u00e9tudiants\n$etudiants = db_query(\"\n    SELECT e.*\n    FROM etudiants e\n    ORDER BY e.nom, e.prenom\n\");",
+        "// Ru00e9cupu00e9rer la liste des u00e9tudiants\n$etudiants = db_query(\"SELECT * FROM etudiants ORDER BY nom, prenom\");",
+        $content
+    );
+    
+    // Sauvegarder les modifications
+    if ($content_modified !== $content) {
+        file_put_contents($file, $content_modified);
+        echo "<p style='color:green'>Correction appliquu00e9e: Simplification de la requu00eate SQL.</p>";
+    } else {
+        echo "<p style='color:red'>Erreur: Impossible de modifier le fichier.</p>";
+    }
+} else {
+    echo "<p>Requu00eate SQL non du00e9tectu00e9e dans le fichier $file</p>";
+}
+
+// Ajouter un u00e9tudiant de test
+echo "<h2>3. Ajout d'un u00e9tudiant de test</h2>";
+
+// Gu00e9nu00e9rer un matricule unique
+$matricule = "ETU-" . date('Y') . mt_rand(10000, 99999);
+$email = "test" . time() . "@example.com";
+
+// Essayer d'ajouter un u00e9tudiant de test
+$sql = "INSERT INTO etudiants (nom, prenom, matricule, email) VALUES (?, ?, ?, ?)";
+$params = ["Test", "Etudiant", $matricule, $email];
+
+$success = db_exec($sql, $params);
+
+if ($success) {
+    $id = db_last_insert_id();
+    echo "<p style='color:green'>Ajout ru00e9ussi! ID de l'u00e9tudiant: $id</p>";
+    echo "<p>Vu00e9rifiez maintenant si cet u00e9tudiant apparau00eet dans la liste.</p>";
+} else {
+    echo "<p style='color:red'>ERREUR lors de l'ajout: " . db_error() . "</p>";
+}
+
+echo "<p><a href='etudiants.php' class='btn btn-primary'>Voir la liste des u00e9tudiants</a></p>";
+?>

@@ -1,0 +1,145 @@
+<?php
+/**
+ * Script direct pour ajouter un enseignant
+ * Ce script ajoute directement un enseignant sans formulaire
+ */
+
+// Afficher les erreurs
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+// Inclure la configuration de la base de donnu00e9es
+require_once 'config/database.php';
+
+// Donnu00e9es de l'enseignant u00e0 ajouter
+$nom = 'Nouvel';
+$prenom = 'Enseignant';
+$email = 'nouvel.enseignant@example.com';
+$password = '12345678'; // Mot de passe simple pour le test
+$password_hash = password_hash($password, PASSWORD_DEFAULT);
+
+echo "<h1>Ajout direct d'un enseignant</h1>";
+
+// Vu00e9rifier si l'enseignant existe du00e9ju00e0
+$sql_check = "SELECT id FROM utilisateurs WHERE email = ?";
+$params_check = [$email];
+
+try {
+    $existing = false;
+    
+    // Vu00e9rification avec MySQLi directement
+    if ($db_type === 'mysql' && $mysqli) {
+        $stmt = $mysqli->prepare($sql_check);
+        if ($stmt) {
+            $stmt->bind_param("s", $email);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            if ($result->num_rows > 0) {
+                $existing = true;
+            }
+            $stmt->close();
+        }
+    }
+    // Vu00e9rification avec PDO pour PostgreSQL
+    else if ($db_type === 'postgresql' && $pdo) {
+        $stmt = $pdo->prepare($sql_check);
+        $stmt->execute($params_check);
+        if ($stmt->rowCount() > 0) {
+            $existing = true;
+        }
+    }
+    
+    if ($existing) {
+        echo "<p style='color:orange'>Un enseignant avec l'email '$email' existe du00e9ju00e0. Suppression pour ru00e9essayer...</p>";
+        
+        // Supprimer l'utilisateur existant
+        $sql_delete = "DELETE FROM utilisateurs WHERE email = ?";
+        $params_delete = [$email];
+        
+        if ($db_type === 'mysql' && $mysqli) {
+            $stmt = $mysqli->prepare($sql_delete);
+            if ($stmt) {
+                $stmt->bind_param("s", $email);
+                $stmt->execute();
+                echo "<p>Utilisateur supprimu00e9.</p>";
+                $stmt->close();
+            }
+        }
+        else if ($db_type === 'postgresql' && $pdo) {
+            $stmt = $pdo->prepare($sql_delete);
+            $stmt->execute($params_delete);
+            echo "<p>Utilisateur supprimu00e9.</p>";
+        }
+    }
+    
+    // Insu00e9rer le nouvel enseignant
+    $sql_insert = "INSERT INTO utilisateurs (nom, prenom, email, mot_de_passe, role) VALUES (?, ?, ?, ?, 'enseignant')";
+    $params_insert = [$nom, $prenom, $email, $password_hash];
+    
+    $inserted = false;
+    $insert_id = 0;
+    
+    // Insertion avec MySQLi
+    if ($db_type === 'mysql' && $mysqli) {
+        echo "<h2>Tentative d'insertion avec MySQLi</h2>";
+        $stmt = $mysqli->prepare($sql_insert);
+        if ($stmt) {
+            $stmt->bind_param("ssss", $nom, $prenom, $email, $password_hash);
+            if ($stmt->execute()) {
+                $inserted = true;
+                $insert_id = $mysqli->insert_id;
+            } else {
+                echo "<p style='color:red'>Erreur lors de l'insertion : " . $stmt->error . "</p>";
+            }
+            $stmt->close();
+        } else {
+            echo "<p style='color:red'>Erreur de pru00e9paration de la requu00eate : " . $mysqli->error . "</p>";
+        }
+    }
+    // Insertion avec PDO pour PostgreSQL
+    else if ($db_type === 'postgresql' && $pdo) {
+        echo "<h2>Tentative d'insertion avec PDO</h2>";
+        $stmt = $pdo->prepare($sql_insert);
+        if ($stmt->execute($params_insert)) {
+            $inserted = true;
+            $insert_id = $pdo->lastInsertId();
+        } else {
+            $error_info = $stmt->errorInfo();
+            echo "<p style='color:red'>Erreur lors de l'insertion : " . $error_info[2] . "</p>";
+        }
+    }
+    
+    if ($inserted) {
+        echo "<div style='background-color: #d4edda; color: #155724; padding: 15px; border-radius: 5px; margin: 20px 0;'>";
+        echo "<h3>Enseignant ajoutu00e9 avec succu00e8s!</h3>";
+        echo "<p><strong>ID:</strong> $insert_id</p>";
+        echo "<p><strong>Nom:</strong> $nom</p>";
+        echo "<p><strong>Pru00e9nom:</strong> $prenom</p>";
+        echo "<p><strong>Email:</strong> $email</p>";
+        echo "<p><strong>Mot de passe:</strong> $password</p>";
+        echo "<p><em>Veuillez noter ces informations de connexion pour les communiquer u00e0 l'enseignant.</em></p>";
+        echo "</div>";
+    } else {
+        echo "<p style='color:red'>L'insertion a u00e9chouu00e9.</p>";
+    }
+    
+} catch (Exception $e) {
+    echo "<p style='color:red'>Exception : " . $e->getMessage() . "</p>";
+}
+
+// Afficher les informations de du00e9bogage sur la base de donnu00e9es
+echo "<h2>Informations sur la base de donnu00e9es</h2>";
+echo "<p><strong>Type de base de donnu00e9es:</strong> $db_type</p>";
+
+if ($db_type === 'mysql') {
+    echo "<p><strong>Version MySQL:</strong> " . $mysqli->server_info . "</p>";
+    echo "<p><strong>Jeu de caractu00e8res:</strong> " . $mysqli->character_set_name() . "</p>";
+} else if ($db_type === 'postgresql') {
+    $version = $pdo->query('SELECT version()')->fetchColumn();
+    echo "<p><strong>Version PostgreSQL:</strong> $version</p>";
+}
+
+echo "<p><a href='enseignants.php'>Retour u00e0 la liste des enseignants</a></p>";
+echo "<p><a href='index.php'>Retour u00e0 l'accueil</a></p>";
+?>

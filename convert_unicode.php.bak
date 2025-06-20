@@ -1,0 +1,115 @@
+<?php
+/**
+ * Script simple pour convertir les caractu00e8res Unicode encodu00e9s (\u00xx) en caractu00e8res franu00e7ais normaux
+ */
+
+// Fonction pour convertir les caractu00e8res Unicode encodu00e9s en caractu00e8res normaux
+function convert_unicode_to_normal($content) {
+    // Utiliser une expression ru00e9guliu00e8re pour capturer tous les caractu00e8res Unicode
+    return preg_replace_callback('/\\\\u([0-9a-fA-F]{4})/', function($matches) {
+        return html_entity_decode('&#x' . $matches[1] . ';', ENT_QUOTES, 'UTF-8');
+    }, $content);
+}
+
+// Fonction pour parcourir ru00e9cursivement un ru00e9pertoire et traiter tous les fichiers PHP
+function process_directory($dir) {
+    $results = [];
+    $files = scandir($dir);
+    
+    foreach ($files as $file) {
+        if ($file === '.' || $file === '..') continue;
+        
+        $path = $dir . '/' . $file;
+        
+        if (is_dir($path)) {
+            // Ru00e9cursion pour les sous-ru00e9pertoires
+            $sub_results = process_directory($path);
+            $results = array_merge($results, $sub_results);
+        } else if (pathinfo($path, PATHINFO_EXTENSION) === 'php') {
+            // Traiter uniquement les fichiers PHP
+            $content = file_get_contents($path);
+            $new_content = convert_unicode_to_normal($content);
+            
+            // Vu00e9rifier si des modifications ont u00e9tu00e9 apportu00e9es
+            if ($content !== $new_content) {
+                // Sauvegarder le fichier original
+                $backup_path = $path . '.bak';
+                file_put_contents($backup_path, $content);
+                
+                // u00c9crire le contenu modifiu00e9
+                file_put_contents($path, $new_content);
+                
+                $results[] = [
+                    'path' => $path,
+                    'modified' => true,
+                    'backup' => $backup_path
+                ];
+            } else {
+                $results[] = [
+                    'path' => $path,
+                    'modified' => false
+                ];
+            }
+        }
+    }
+    
+    return $results;
+}
+
+// Du00e9but du script
+$start_time = microtime(true);
+
+// En-tu00eate HTML
+echo "<!DOCTYPE html>\n<html lang='fr'>\n<head>\n    <meta charset='UTF-8'>\n    <meta name='viewport' content='width=device-width, initial-scale=1.0'>\n    <title>Conversion des caractu00e8res Unicode</title>\n    <link href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css' rel='stylesheet'>\n    <style>\n        body { padding: 20px; }\n        .card { margin-bottom: 20px; }\n        .modified { background-color: #d1e7dd; }\n    </style>\n</head>\n<body>\n    <div class='container'>\n        <h1 class='mb-4'>Conversion des caractu00e8res Unicode en caractu00e8res franu00e7ais</h1>";
+
+// Ru00e9pertoire racine du projet
+$root_dir = __DIR__;
+
+// Traiter tous les fichiers PHP du projet
+echo "<div class='alert alert-info'>\n    <p>Traitement des fichiers en cours...</p>\n</div>";
+
+// Vider le buffer de sortie pour afficher le message de traitement
+ob_flush();
+flush();
+
+// Traiter les fichiers
+$results = process_directory($root_dir);
+
+// Afficher les ru00e9sultats
+$modified_count = 0;
+$total_count = count($results);
+
+foreach ($results as $result) {
+    if ($result['modified']) {
+        $modified_count++;
+    }
+}
+
+echo "<div class='alert alert-success'>\n    <h4>Traitement terminu00e9</h4>\n    <p>$modified_count fichiers modifiu00e9s sur $total_count fichiers PHP traitu00e9s.</p>\n</div>";
+
+// Afficher la liste des fichiers modifiu00e9s
+if ($modified_count > 0) {
+    echo "<h2>Fichiers modifiu00e9s</h2>\n    <div class='card'>\n        <div class='card-header'>\n            <h5 class='card-title mb-0'>Liste des fichiers ou00f9 des caractu00e8res Unicode ont u00e9tu00e9 convertis</h5>\n        </div>\n        <div class='card-body'>\n            <div class='table-responsive'>\n                <table class='table table-striped'>\n                    <thead>\n                        <tr>\n                            <th>Fichier</th>\n                            <th>Statut</th>\n                        </tr>\n                    </thead>\n                    <tbody>";
+    
+    foreach ($results as $result) {
+        if ($result['modified']) {
+            $relative_path = str_replace($root_dir . '/', '', $result['path']);
+            echo "<tr class='modified'>\n                <td>$relative_path</td>\n                <td><span class='badge bg-success'>Modifiu00e9</span></td>\n            </tr>";
+        }
+    }
+    
+    echo "</tbody>\n                </table>\n            </div>\n        </div>\n    </div>";
+}
+
+// Afficher le temps d'exu00e9cution
+$end_time = microtime(true);
+$execution_time = round($end_time - $start_time, 2);
+
+echo "<div class='alert alert-info'>\n    <p>Temps d'exu00e9cution: $execution_time secondes</p>\n</div>";
+
+// Liens de navigation
+echo "<div class='mt-4'>\n    <a href='index.php' class='btn btn-primary'>Retour u00e0 l'accueil</a>\n</div>";
+
+// Pied de page HTML
+echo "</div>\n    <script src='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js'></script>\n</body>\n</html>";
+?>

@@ -1,0 +1,172 @@
+<?php
+/**
+ * Page de gestion des cours de l'enseignant connectu00e9
+ */
+
+// Inclure les fichiers nu00e9cessaires
+require_once 'includes/auth.php';
+require_once 'config/database.php';
+
+// Vérifier l'authentification
+require_auth();
+
+// Récupérer la liste des cours de l'enseignant connecté
+if (est_admin()) {
+    // Les administrateurs voient tous les cours
+    $cours = db_query("
+        SELECT c.*, u.nom as enseignant_nom, u.prenom as enseignant_prenom,
+        COUNT(DISTINCT i.etudiant_id) as nb_etudiants,
+        COUNT(DISTINCT p.id) as total_presences,
+        COALESCE(SUM(CASE WHEN p.statut = 'present' THEN 1 ELSE 0 END), 0) as nb_presents
+        FROM cours c
+        LEFT JOIN utilisateurs u ON c.enseignant_id = u.id
+        LEFT JOIN inscriptions i ON c.id = i.cours_id
+        LEFT JOIN presences p ON c.id = p.cours_id
+        GROUP BY c.id, c.nom, c.code, c.description, c.enseignant_id, u.nom, u.prenom
+        ORDER BY c.nom
+    ");
+} else {
+    // Les enseignants ne voient que leurs cours
+    $cours = db_query("
+        SELECT c.*, u.nom as enseignant_nom, u.prenom as enseignant_prenom,
+        COUNT(DISTINCT i.etudiant_id) as nb_etudiants,
+        COUNT(DISTINCT p.id) as total_presences,
+        COALESCE(SUM(CASE WHEN p.statut = 'present' THEN 1 ELSE 0 END), 0) as nb_presents
+        FROM cours c
+        LEFT JOIN utilisateurs u ON c.enseignant_id = u.id
+        LEFT JOIN inscriptions i ON c.id = i.cours_id
+        LEFT JOIN presences p ON c.id = p.cours_id
+        WHERE c.enseignant_id = ?
+        GROUP BY c.id, c.nom, c.code, c.description, c.enseignant_id, u.nom, u.prenom
+        ORDER BY c.nom
+    ", [$_SESSION['user_id']]);
+}
+
+// Inclure le header
+include 'includes/header.php';
+?>
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2"><i class="fas fa-book"></i> Mes Cours</h1>
+        <?php if (est_admin()): ?>
+        <div>
+            <a href="ajouter_cours.php" class="btn btn-primary">
+                <i class="fas fa-plus-circle"></i> Ajouter un Cours
+            </a>
+        </div>
+        <?php endif; ?>
+    </div>
+
+    <div class="text-center mb-4">
+        <img src="assets/images/decoratives/le-chef-ingenieur-role-et-competences.png" alt="Chef ingénieur" class="img-fluid rounded" style="max-width: 400px;">
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-dark text-white">
+            <h5 class="card-title mb-0"><i class="fas fa-list"></i> Liste de mes Cours</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover data-table">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Code</th>
+                            <th>Nom du Cours</th>
+                            <?php if (est_admin()): ?>
+                            <th>Enseignant</th>
+                            <?php endif; ?>
+                            <th>Étudiants</th>
+                            <th>Présences</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($cours)): ?>
+                            <tr>
+                                <td colspan="<?php echo est_admin() ? 6 : 5; ?>" class="text-center">Aucun cours enregistré.</td>
+                            </tr>
+                        <?php else: ?>
+                            <?php foreach ($cours as $c): ?>
+                                <tr>
+                                    <td class="fw-bold"><?= htmlspecialchars($c['code']) ?></td>
+                                    <td>
+                                        <h6 class="mb-0"><?= htmlspecialchars($c['nom']) ?></h6>
+                                        <small class="text-muted"><?= htmlspecialchars($c['description']) ?></small>
+                                    </td>
+                                    <?php if (est_admin()): ?>
+                                    <td>
+                                        <?php if ($c['enseignant_id']): ?>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-user-graduate me-2"></i>
+                                                <?= htmlspecialchars($c['enseignant_nom'] . ' ' . $c['enseignant_prenom']) ?>
+                                            </div>
+                                        <?php else: ?>
+                                            <span class="text-muted">Non assigné</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <?php endif; ?>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-users me-2"></i>
+                                            <span><?= $c['nb_etudiants'] ?></span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-2">
+                                                <i class="fas fa-check-circle text-success"></i>
+                                                <span class="ms-1"><?= $c['nb_presents'] ?></span>
+                                            </div>
+                                            <div class="ms-2">
+                                                <i class="fas fa-times-circle text-danger"></i>
+                                                <span class="ms-1"><?= $c['total_presences'] - $c['nb_presents'] ?></span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <a href="presence.php?cours_id=<?= $c['id'] ?>" class="btn btn-sm btn-outline-success" title="Marquer les présences">
+                                                <i class="fas fa-clipboard-check"></i>
+                                            </a>
+                                            <a href="liste_etudiants.php?cours_id=<?= $c['id'] ?>" class="btn btn-sm btn-outline-info" title="Liste des étudiants">
+                                                <i class="fas fa-users"></i>
+                                            </a>
+                                            <?php if (est_admin()): ?>
+                                            <a href="ajouter_cours.php?id=<?= $c['id'] ?>" class="btn btn-sm btn-outline-primary" title="Modifier">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="cours.php?action=delete&id=<?= $c['id'] ?>" class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </a>
+                                            <?php endif; ?>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <!-- Image du00e9corative -->
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="card-title mb-0"><i class="fas fa-book"></i> Repru00e9sentation des Cours</h5>
+                </div>
+                <div class="card-body">
+                    <img src="assets/images/courses.svg" alt="Repru00e9sentation visuelle des cours" class="decorative-image">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php
+// Inclure le footer
+include 'includes/footer.php';
+?>

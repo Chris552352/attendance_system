@@ -1,0 +1,254 @@
+/* Styles spécifiques pour la page de rapports */
+
+/* Filtres */
+.filter-section {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border-left: 4px solid var(--couleur-primaire);
+}
+
+.filter-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    color: var(--couleur-secondaire);
+    font-weight: 600;
+}
+
+.filter-title i {
+    color: var(--couleur-primaire);
+}
+
+.filter-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+/* Stats rapides */
+.quick-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.stat-item {
+    flex: 1;
+    min-width: 150px;
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    text-align: center;
+    border-top: 3px solid var(--couleur-primaire);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.stat-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.stat-icon {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    font-size: 2em;
+    opacity: 0.1;
+    color: var(--couleur-primaire);
+}
+
+.stat-item.present {
+    border-top-color: var(--couleur-succes);
+}
+
+.stat-item.absent {
+    border-top-color: var(--couleur-danger);
+}
+
+.stat-item.total {
+    border-top-color: var(--couleur-avertissement);
+}
+
+.stat-label {
+    font-size: 0.9em;
+    color: #555;
+    margin-bottom: 5px;
+}
+
+.stat-value {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: var(--couleur-secondaire);
+}
+
+.stat-item.present .stat-value {
+    color: var(--couleur-succes);
+}
+
+.stat-item.absent .stat-value {
+    color: var(--couleur-danger);
+}
+
+/* Zone du graphique */
+.chart-container {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border-top: 3px solid var(--couleur-primaire);
+    position: relative;
+}
+
+.chart-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    color: var(--couleur-secondaire);
+    font-weight: 600;
+}
+
+.chart-actions {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+.chart-toggle {
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.85em;
+}
+
+.chart-toggle:hover {
+    background-color: #e9ecef;
+}
+
+.chart-toggle i {
+    color: var(--couleur-primaire);
+}
+
+/* Tableaux de données */
+.report-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-bottom: 25px;
+}
+
+.report-table th {
+    background-color: var(--couleur-secondaire);
+    color: white;
+    text-align: left;
+    padding: 12px 15px;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+}
+
+.report-table th:first-child {
+    border-top-left-radius: 8px;
+}
+
+.report-table th:last-child {
+    border-top-right-radius: 8px;
+}
+
+.report-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.report-table tr:last-child td {
+    border-bottom: none;
+}
+
+.report-table tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* Statut présence */
+.status-present, 
+.status-absent {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: 600;
+}
+
+.status-present {
+    background-color: rgba(45, 147, 108, 0.1);
+    color: var(--couleur-succes);
+}
+
+.status-absent {
+    background-color: rgba(191, 6, 3, 0.1);
+    color: var(--couleur-danger);
+}
+
+/* Boutons d'exportation */
+.export-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.export-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #333;
+    font-size: 0.9em;
+}
+
+.export-btn:hover {
+    background-color: #e9ecef;
+}
+
+.export-btn i {
+    color: var(--couleur-primaire);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .quick-stats {
+        flex-direction: column;
+    }
+    
+    .chart-actions {
+        position: static;
+        margin-bottom: 15px;
+    }
+    
+    .filter-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+}

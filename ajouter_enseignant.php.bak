@@ -1,0 +1,213 @@
+<?php
+/**
+ * Page d'ajout/modification d'un enseignant
+ */
+
+// Inclure les fichiers nécessaires
+require_once 'includes/auth.php';
+require_once 'config/database.php';
+
+// Vérifier l'authentification et les droits d'administrateur
+require_admin();
+
+// Variables pour le formulaire
+$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$mode = $id > 0 ? 'modifier' : 'ajouter';
+$enseignant = [
+    'nom' => '',
+    'prenom' => '',
+    'email' => ''
+];
+
+// Variable pour stocker les informations de connexion
+$login_info = null;
+
+// Mode modification: récupérer les données de l'enseignant
+if ($mode === 'modifier') {
+    $result = db_query_single("SELECT * FROM utilisateurs WHERE id = ? AND role = 'enseignant'", [$id]);
+    
+    if (!$result) {
+        alerte("Enseignant introuvable.", "danger");
+        rediriger('enseignants.php');
+    }
+    
+    $enseignant = $result;
+}
+
+// Traitement du formulaire
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Récupérer et valider les données du formulaire
+    $enseignant['nom'] = securiser($_POST['nom'] ?? '');
+    $enseignant['prenom'] = securiser($_POST['prenom'] ?? '');
+    $enseignant['email'] = securiser($_POST['email'] ?? '');
+    
+    // Validation
+    $erreurs = [];
+    
+    if (empty($enseignant['nom'])) {
+        $erreurs[] = "Le nom est obligatoire.";
+    }
+    
+    if (empty($enseignant['prenom'])) {
+        $erreurs[] = "Le prénom est obligatoire.";
+    }
+    
+    if (empty($enseignant['email'])) {
+        $erreurs[] = "L'email est obligatoire.";
+    } elseif (!filter_var($enseignant['email'], FILTER_VALIDATE_EMAIL)) {
+        $erreurs[] = "L'email n'est pas valide.";
+    } elseif (email_existe($enseignant['email'], 'utilisateurs', $id)) {
+        $erreurs[] = "Cet email est déjà utilisé par un autre utilisateur.";
+    }
+    
+    // Si pas d'erreurs, enregistrer l'enseignant
+    if (empty($erreurs)) {
+        if ($mode === 'ajouter') {
+            try {
+                // Générer un mot de passe aléatoire
+                $password = substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 8);
+                $password_hash = password_hash($password, PASSWORD_DEFAULT);
+                
+                // Insérer un nouvel enseignant dans la table utilisateurs
+                $sql = "INSERT INTO utilisateurs (nom, prenom, email, mot_de_passe, role) 
+                        VALUES (?, ?, ?, ?, 'enseignant')";
+                $params = [
+                    $enseignant['nom'], $enseignant['prenom'], $enseignant['email'], $password_hash
+                ];
+                
+                if (db_exec($sql, $params)) {
+                    $user_id = db_last_insert_id();
+                    
+                    // Stocker les informations de connexion pour affichage
+                    $login_info = [
+                        'email' => $enseignant['email'],
+                        'password' => $password
+                    ];
+                    
+                    alerte("L'enseignant a été ajouté avec succès.", "success");
+                } else {
+                    alerte("Erreur lors de l'ajout de l'enseignant.", "danger");
+                }
+            } catch (Exception $e) {
+                error_log("Erreur lors de l'ajout de l'enseignant: " . $e->getMessage());
+                alerte("Erreur lors de l'ajout de l'enseignant: " . $e->getMessage(), "danger");
+            }
+        } else {
+            // Mettre à jour un enseignant existant
+            $sql = "UPDATE utilisateurs SET nom = ?, prenom = ?, email = ? WHERE id = ? AND role = 'enseignant'";
+            $params = [
+                $enseignant['nom'], $enseignant['prenom'], $enseignant['email'], $id
+            ];
+            
+            if (db_exec($sql, $params)) {
+                alerte("L'enseignant a été mis à jour avec succès.", "success");
+                rediriger('enseignants.php');
+            } else {
+                alerte("Erreur lors de la mise à jour de l'enseignant.", "danger");
+            }
+        }
+    }
+}
+
+// Inclure le header
+include 'includes/header.php';
+
+// Débogage - Afficher les erreurs PHP
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+?>
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">
+            <i class="fas fa-chalkboard-teacher"></i> 
+            <?php echo $mode === 'ajouter' ? 'Ajouter un enseignant' : 'Modifier l\'enseignant'; ?>
+        </h1>
+        <div>
+            <a href="enseignants.php" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Retour à la liste
+            </a>
+        </div>
+    </div>
+
+    <?php if (isset($erreurs) && !empty($erreurs)): ?>
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                <?php foreach ($erreurs as $erreur): ?>
+                    <li><?php echo $erreur; ?></li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+    <?php endif; ?>
+    
+    <?php if ($login_info): ?>
+        <div class="alert alert-success">
+            <h4><i class="fas fa-key"></i> Informations de connexion</h4>
+            <p>L'enseignant a u00e9tu00e9 ajoutu00e9 avec succu00e8s. Voici ses informations de connexion :</p>
+            <ul>
+                <li><strong>Email:</strong> <?php echo htmlspecialchars($login_info['email']); ?></li>
+                <li><strong>Mot de passe:</strong> <?php echo htmlspecialchars($login_info['password']); ?></li>
+            </ul>
+            <p class="mb-0"><small>Veuillez communiquer ces informations u00e0 l'enseignant. Il pourra se connecter et changer son mot de passe ultu00e9rieurement.</small></p>
+        </div>
+    <?php endif; ?>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="card-title mb-0">
+                        <?php echo $mode === 'ajouter' ? 'Nouvel enseignant' : 'Modifier les informations'; ?>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="" class="needs-validation" novalidate>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="nom" class="form-label">Nom <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="nom" name="nom" value="<?php echo htmlspecialchars($enseignant['nom']); ?>" required>
+                                <div class="invalid-feedback">Veuillez entrer un nom.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="prenom" class="form-label">Prénom <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="prenom" name="prenom" value="<?php echo htmlspecialchars($enseignant['prenom']); ?>" required>
+                                <div class="invalid-feedback">Veuillez entrer un prénom.</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($enseignant['email']); ?>" required>
+                            <div class="invalid-feedback">Veuillez entrer une adresse email valide.</div>
+                        </div>
+
+
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> 
+                                <?php echo $mode === 'ajouter' ? 'Ajouter l\'enseignant' : 'Enregistrer les modifications'; ?>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-center align-items-center h-100">
+                        <img src="assets/images/teacher.svg" alt="Enseignant" class="img-fluid" style="max-height: 300px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php
+// Inclure le footer
+include 'includes/footer.php';
+?>

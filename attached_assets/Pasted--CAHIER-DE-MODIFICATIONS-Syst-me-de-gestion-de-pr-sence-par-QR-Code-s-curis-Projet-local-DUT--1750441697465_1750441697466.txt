@@ -1,0 +1,69 @@
+
+CAHIER DE MODIFICATIONS – Système de gestion de présence par QR Code sécurisé (Projet local DUT)
+
+---------------------------------------------
+OBJECTIF :
+---------------------------------------------
+Permettre à chaque étudiant de scanner un QR code affiché par l'enseignant pour marquer sa présence, en s’assurant que :
+✔ Un étudiant ne peut pas valider pour un autre
+✔ Les présences sont valides uniquement pendant une courte durée
+✔ Le système reste simple, local, et efficace pour un projet de soutenance
+
+---------------------------------------------
+MODIFICATIONS À INTÉGRER
+---------------------------------------------
+
+✅ 1. Connexion avec mot de passe personnel
+---------------------------------------------
+• Chaque étudiant possède un identifiant unique (email ou matricule) ET un mot de passe personnel (ex. : date de naissance).
+• Le système ne permet plus à un étudiant d'accéder au compte d’un autre sans son mot de passe.
+• Table “etudiants” doit contenir : id, nom, email, mot_de_passe
+
+✅ 2. Session utilisateur PHP
+---------------------------------------------
+• Une fois connecté, le serveur enregistre : $_SESSION['etudiant_id'] = ID de l’étudiant.
+• Cette session est utilisée pour toute opération : validation de présence, affichage de l’identité, etc.
+
+✅ 3. QR Code à durée limitée
+---------------------------------------------
+• Le QR code encode une URL du type :
+  http://192.168.1.10/gestio2/presence.php?seance=5&token=xyz123
+• Le token est stocké dans la table “seances” avec une date d’expiration.
+• Si un étudiant scanne un QR expiré, le système affiche “QR code expiré”.
+
+✅ 4. Affichage d’identité avant validation
+---------------------------------------------
+• Lorsque l’étudiant scanne le QR code, la page `presence.php` :
+    - Lit la session active ($_SESSION['etudiant_id'])
+    - Affiche son nom et adresse email (ex: “Vous êtes connecté en tant que : Chris Gerald (chris@iut.cm)”)
+    - Lui demande de confirmer sa présence via un bouton
+• Cela empêche un étudiant de tricher facilement avec le compte d’un autre.
+
+✅ 5. Validation unique par séance
+---------------------------------------------
+• Le système vérifie si l’étudiant a déjà signé pour cette séance (table “presences”)
+• Si oui : message “Présence déjà enregistrée”
+
+✅ 6. Structure minimale de la base de données
+---------------------------------------------
+• Table `etudiants` :
+  id, nom, email, mot_de_passe
+
+• Table `seances` :
+  id, nom_cours, date_heure, token, expiration
+
+• Table `presences` :
+  id, etudiant_id, seance_id, date_heure
+
+✅ 7. Sécurité et simplicité pour soutenance
+---------------------------------------------
+• Fonctionne sans internet, en réseau local
+• Pas besoin d’application mobile, tout passe par navigateur
+• Pas besoin de photo, uniquement email + nom affiché
+ mais ça ne change rien l'admin a pour email chris552352@gmail.com, mot de passe 552352 et il creer le compte des enseignants et gerer les autres entités
+---------------------------------------------
+CONCLUSION :
+---------------------------------------------
+Ce système est simple à coder et suffisamment sécurisé pour une soutenance DUT. Il bloque les principales tentatives de triche (usurpation, double validation) tout en restant léger.
+  
+de forme @gmail.com ou icloud.com
