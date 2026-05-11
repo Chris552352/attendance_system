@@ -6,9 +6,12 @@
 // Inclure les fichiers nécessaires
 require_once 'includes/auth.php';
 require_once 'config/database.php';
+require_once 'includes/ensure_classes_etablissement_schema.php';
 
 // Vérifier l'authentification
 require_auth();
+
+ensure_classes_etablissement_schema();
 
 // Supprimer un étudiant
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
@@ -35,8 +38,14 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
     rediriger('etudiants.php');
 }
 
-// Récupérer la liste des étudiants avec tous les champs explicitement nommés
-$etudiants = db_query("SELECT id, matricule, nom, prenom, email, telephone, date_naissance, adresse FROM etudiants ORDER BY nom, prenom");
+// Récupérer la liste des étudiants (avec classe si définie)
+$etudiants = db_query(
+    "SELECT e.id, e.matricule, e.nom, e.prenom, e.email,
+            cl.code AS classe_code, cl.nom AS classe_nom, cl.niveau AS classe_niveau, cl.filiere AS classe_filiere
+     FROM etudiants e
+     LEFT JOIN classes_etablissement cl ON e.classe_id = cl.id
+     ORDER BY e.nom, e.prenom"
+);
 
 // Déboguer les données (commenter en production)
 // echo '<pre>'; print_r($etudiants); echo '</pre>';
@@ -124,8 +133,8 @@ body.theme-etudiants { background: #fff; }
                             <th>Matricule</th>
                             <th>Nom</th>
                             <th>Prénom</th>
+                            <th>Promotion</th>
                             <th>Email</th>
-                            <th>Téléphone</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -140,8 +149,27 @@ body.theme-etudiants { background: #fff; }
                                     <td><?= htmlspecialchars($etudiant['matricule'] ?? '') ?></td>
                                     <td><?= htmlspecialchars($etudiant['nom'] ?? '') ?></td>
                                     <td><?= htmlspecialchars($etudiant['prenom'] ?? '') ?></td>
+                                    <td>
+                                        <?php if (!empty($etudiant['classe_code'])): ?>
+                                            <span class="badge bg-info text-dark"><?= htmlspecialchars($etudiant['classe_code']) ?></span>
+                                            <small class="text-muted d-block">
+                                                <?php
+                                                $pn = array_values(array_filter([
+                                                    trim((string) ($etudiant['classe_niveau'] ?? '')),
+                                                    trim((string) ($etudiant['classe_filiere'] ?? '')),
+                                                ], static fn ($x) => $x !== ''));
+                                                echo htmlspecialchars($pn !== [] ? implode(' · ', $pn) : '');
+                                                ?>
+                                                <?php if (!empty($etudiant['classe_nom'])): ?>
+                                                    <?php if ($pn !== []): ?><br><?php endif; ?>
+                                                    <?= htmlspecialchars($etudiant['classe_nom']) ?>
+                                                <?php endif; ?>
+                                            </small>
+                                        <?php else: ?>
+                                            <span class="text-muted">—</span>
+                                        <?php endif; ?>
+                                    </td>
                                     <td><?= htmlspecialchars($etudiant['email'] ?? '') ?></td>
-                                    <td><?= isset($etudiant['telephone']) && $etudiant['telephone'] !== null ? htmlspecialchars($etudiant['telephone']) : '' ?></td>
                                     <td>
                                         <a href="ajouter_etudiant.php?id=<?= $etudiant['id'] ?>" class="btn btn-sm btn-edit custom-tooltip" data-tooltip="Modifier cet étudiant">
                                             <i class="fas fa-edit"></i>

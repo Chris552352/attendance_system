@@ -173,4 +173,16 @@ function changer_mot_de_passe($user_id, $ancien_mot_de_passe, $nouveau_mot_de_pa
     $hash = password_hash($nouveau_mot_de_passe, PASSWORD_DEFAULT);
     return db_exec("UPDATE utilisateurs SET mot_de_passe = ? WHERE id = ?", [$hash, $user_id]);
 }
+
+/**
+ * Protège une page nécessitant une authentification étudiante
+ * Redirige vers la page de connexion étudiant si non connecté
+ */
+function require_student_auth() {
+    if (!isset($_SESSION['etudiant_id'])) {
+        alerte("Veuillez vous connecter avec votre compte étudiant pour accéder à cette page.", "warning");
+        rediriger("login_etudiant.php");
+    }
+}
+
 ?>

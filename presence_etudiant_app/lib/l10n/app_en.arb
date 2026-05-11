@@ -1,0 +1,117 @@
+{
+  "@@locale": "en",
+  "appTitle": "Student attendance",
+  "navPresence": "Attendance",
+  "actionLogout": "Log out",
+  "actionLogin": "Log in",
+  "actionConnect": "Sign in",
+  "studentLoginTitle": "Student login",
+  "sameWifiHint": "Same Wi‑Fi network as the PC (WAMP).",
+  "serverLabel": "Server",
+  "serverNotConfiguredSnackbar": "Server not configured. Scan a QR code to set it up.",
+  "configureServer": "Set up",
+  "changeServer": "Change",
+  "notConfigured": "Not configured",
+  "emailLabel": "Email",
+  "passwordLabel": "Password",
+  "emailRequired": "Email is required.",
+  "emailInvalid": "Invalid email.",
+  "passwordRequired": "Password is required.",
+  "unexpectedError": "Unexpected error.",
+  "scanQrButton": "Scan QR code",
+  "scanQrTitle": "Scan QR",
+  "torchTooltip": "Flashlight",
+  "afterScanBiometricHint": "After scanning, confirm with fingerprint, face recognition, or your phone PIN.",
+  "myPresencesJustifications": "My attendance & justifications",
+  "myProfile": "My profile",
+  "myCourses": "My courses",
+  "disconnect": "Sign out",
+  "matriculeWithValue": "Student ID: {id}",
+  "@matriculeWithValue": {
+    "placeholders": {
+      "id": {"type": "String"}
+    }
+  },
+  "emailWithLabel": "Email: {email}",
+  "@emailWithLabel": {
+    "placeholders": {
+      "email": {"type": "String"}
+    }
+  },
+  "biometricCancelledSnackbar": "Attendance cancelled: authentication required.",
+  "biometricUnavailableSnackbar": "Biometrics unavailable on this device — add a fingerprint or face in Settings for better security.",
+  "biometricOrSendInProgress": "Biometric authentication or sending…",
+  "frameQrHint": "Frame the QR code shown on the teacher’s computer.",
+  "configureServerTitle": "Configure server",
+  "configuringServer": "Configuring…",
+  "scanQrForServerHint": "Scan a presence QR shown by the teacher.\nThe app will detect the server URL automatically.",
+  "invalidQrSnackbar": "Invalid QR.",
+  "biometricConfirmReason": "Confirm your identity to record attendance (fingerprint or face).",
+  "retry": "Retry",
+  "noCoursesFound": "No courses found.",
+  "noPresencesYet": "No attendance recorded yet.",
+  "mesPresencesTitle": "My attendance & absences",
+  "refreshTooltip": "Refresh",
+  "justifyAbsenceTitle": "Justify an absence",
+  "dateLine": "Date: {date}",
+  "@dateLine": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "motifLabel": "Reason",
+  "fileTooLarge": "File too large (max 5 MB).",
+  "cannotReadFile": "Could not read this file.",
+  "removeAttachment": "Remove attachment",
+  "cancel": "Cancel",
+  "send": "Send",
+  "enterReason": "Enter a reason.",
+  "justificationPending": "Justification pending",
+  "justificationAccepted": "Justification accepted",
+  "justificationRejected": "Justification rejected",
+  "justified": "Excused",
+  "present": "Present",
+  "absent": "Absent",
+  "yourMessage": "Your message: {text}",
+  "@yourMessage": {
+    "placeholders": {
+      "text": {"type": "String"}
+    }
+  },
+  "staffReply": "Reply: {text}",
+  "@staffReply": {
+    "placeholders": {
+      "text": {"type": "String"}
+    }
+  },
+  "sendJustification": "Submit a justification",
+  "messaging": "Messages",
+  "attachFileButton": "Add attachment (PDF/JPG/PNG)",
+  "attachmentNamed": "Attachment: {name}",
+  "@attachmentNamed": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "profileTitle": "My profile",
+  "firstName": "First name",
+  "lastName": "Last name",
+  "save": "Save",
+  "passwordChangeHint": "Password changes on the website (if enabled).",
+  "errorGeneric": "Error.",
+  "languageTitle": "Language",
+  "languageFrench": "French",
+  "languageEnglish": "English",
+  "languageSystem": "System default",
+  "teacherLabel": "Teacher: {name}",
+  "@teacherLabel": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "authCancelledNoPresence": "Authentication cancelled. Attendance was not recorded.",
+  "presenceMarkedSuccess": "Attendance recorded successfully!",
+  "presenceMarkFailed": "Could not record attendance.",
+  "profileClassLabel": "Program (level · major)",
+  "profileClassNotSet": "Not assigned"
+}

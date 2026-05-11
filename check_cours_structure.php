@@ -5,6 +5,11 @@
 
 // Inclure les fichiers nécessaires
 require_once 'config/database.php';
+require_once 'includes/auth.php';
+require_auth();
+
+$user_id = $_SESSION['user_id'];
+$role = $_SESSION['role'] ?? '';
 
 // Vérifier la structure de la table cours
 echo "<h2>Structure de la table cours</h2>";
@@ -77,4 +82,31 @@ foreach ($enseignants_cours as $row) {
 }
 if ($last_enseignant !== null) echo "</tr>";
 echo "</table>";
+
+// Liste tous les cours avec leur enseignant
+$cours = db_query("SELECT c.id, c.nom, c.code, c.enseignant_id, u.nom as enseignant_nom, u.prenom as enseignant_prenom, u.email as enseignant_email FROM cours c LEFT JOIN utilisateurs u ON c.enseignant_id = u.id ORDER BY c.nom");
+
+// Affichage
+echo "<h2>Diagnostic des Cours et Assignation Enseignant</h2>";
+echo "<table border='1' cellpadding='6' style='border-collapse:collapse;'>";
+echo "<tr style='background:#1976d2;color:white;'><th>ID</th><th>Nom</th><th>Code</th><th>Enseignant</th><th>Email</th><th>Assigné à moi ?</th></tr>";
+foreach ($cours as $c) {
+    $is_mine = ($c['enseignant_id'] == $user_id) ? "<span style='color:green;font-weight:bold;'>OUI</span>" : "<span style='color:red;'>NON</span>";
+    echo "<tr>";
+    echo "<td>" . htmlspecialchars($c['id']) . "</td>";
+    echo "<td>" . htmlspecialchars($c['nom']) . "</td>";
+    echo "<td>" . htmlspecialchars($c['code']) . "</td>";
+    echo "<td>" . htmlspecialchars($c['enseignant_nom'] . ' ' . $c['enseignant_prenom']) . "</td>";
+    echo "<td>" . htmlspecialchars($c['enseignant_email']) . "</td>";
+    echo "<td style='text-align:center;'>$is_mine</td>";
+    echo "</tr>";
+}
+echo "</table>";
+
+// Message explicatif
+if ($role === 'enseignant') {
+    echo "<p style='margin-top:2em;'><b>Seuls les cours marqués <span style='color:green;'>OUI</span> sont disponibles pour la génération de QR code avec votre compte.</b></p>";
+} else {
+    echo "<p style='margin-top:2em;'><b>Vous êtes administrateur, vous pouvez voir tous les cours.</b></p>";
+}
 ?>

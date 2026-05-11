@@ -6,9 +6,12 @@
 // Inclure les fichiers nécessaires
 require_once 'includes/auth.php';
 require_once 'config/database.php';
+require_once 'includes/ensure_classes_etablissement_schema.php';
 
 // Vérifier l'authentification
 require_auth();
+
+ensure_classes_etablissement_schema();
 
 // Variables pour le formulaire
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
@@ -23,6 +26,23 @@ $etudiant = [
     'adresse' => '',
     'cours_ids' => []
 ];
+
+// Détecter les colonnes réellement disponibles dans etudiants
+$colonnes_etudiants = db_query("DESCRIBE etudiants");
+$colonnes_disponibles = array_column($colonnes_etudiants, 'Field');
+$has_telephone = in_array('telephone', $colonnes_disponibles, true);
+$has_date_naissance = in_array('date_naissance', $colonnes_disponibles, true);
+$has_adresse = in_array('adresse', $colonnes_disponibles, true);
+$has_classe_id = in_array('classe_id', $colonnes_disponibles, true);
+$classes_list = $has_classe_id
+    ? db_query(
+        "SELECT id, code, nom, niveau, filiere FROM classes_etablissement
+         WHERE actif = 1
+           AND niveau IS NOT NULL AND TRIM(niveau) <> ''
+           AND filiere IS NOT NULL AND TRIM(filiere) <> ''
+         ORDER BY niveau, filiere, code"
+    )
+    : [];
 
 // Récupérer la liste des cours
 $cours = db_query("SELECT id, nom, code FROM cours ORDER BY nom");
@@ -53,10 +73,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $etudiant['nom'] = securiser($_POST['nom'] ?? '');
     $etudiant['prenom'] = securiser($_POST['prenom'] ?? '');
     $etudiant['email'] = securiser($_POST['email'] ?? '');
-    $etudiant['telephone'] = securiser($_POST['telephone'] ?? '');
-    $etudiant['date_naissance'] = securiser($_POST['date_naissance'] ?? '');
-    $etudiant['adresse'] = securiser($_POST['adresse'] ?? '');
+    $etudiant['telephone'] = $has_telephone ? securiser($_POST['telephone'] ?? '') : '';
+    $etudiant['date_naissance'] = $has_date_naissance ? securiser($_POST['date_naissance'] ?? '') : '';
+    $etudiant['adresse'] = $has_adresse ? securiser($_POST['adresse'] ?? '') : '';
     $etudiant['cours_ids'] = isset($_POST['cours']) ? $_POST['cours'] : [];
+
+    $classe_id_post = null;
+    if ($has_classe_id && isset($_POST['classe_id'])) {
+        $cid = (int) $_POST['classe_id'];
+        if ($cid > 0) {
+            $ok_classe = db_query_single('SELECT id FROM classes_etablissement WHERE id = ? AND actif = 1', [$cid]);
+            $classe_id_post = $ok_classe ? $cid : null;
+        }
+    }
+    if ($has_classe_id) {
+        $etudiant['classe_id'] = $classe_id_post;
+    }
     
     // Générer un matricule si c'est un nouvel étudiant
     if ($mode === 'ajouter') {
@@ -81,6 +113,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (email_existe($etudiant['email'], 'etudiants', $id)) {
         $erreurs[] = "Cet email est déjà utilisé par un autre étudiant.";
     }
+
+    if ($has_classe_id && ($classe_id_post === null || $classe_id_post <= 0)) {
+        $erreurs[] = 'La promotion (niveau / filière) est obligatoire : choisissez un groupe dans la liste.';
+    }
     
     // Si pas d'erreurs, enregistrer l'étudiant
     if (empty($erreurs)) {
@@ -90,10 +126,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $params = [$etudiant['nom'], $etudiant['prenom'], $etudiant['matricule'], $etudiant['email']];
             
             // Ajouter les champs optionnels s'ils existent dans la table
-            $optional_fields = ['telephone', 'date_naissance', 'adresse'];
+            $optional_fields = array_values(array_intersect(
+                ['telephone', 'date_naissance', 'adresse'],
+                $colonnes_disponibles
+            ));
             foreach ($optional_fields as $field) {
                 $fields[] = $field;
                 $params[] = isset($etudiant[$field]) ? $etudiant[$field] : '';
+            }
+            if ($has_classe_id) {
+                $fields[] = 'classe_id';
+                $params[] = $classe_id_post;
             }
             
             // Construire la requête d'insertion dynamiquement
@@ -111,7 +154,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 alerte("L'étudiant a été ajouté avec succès.", "success");
                 rediriger('etudiants.php');
             } else {
-                alerte("Erreur lors de l'ajout de l'étudiant.", "danger");
+                // Affichage détaillé de l'erreur SQL
+                $msg = "Erreur lors de l'ajout de l'étudiant.";
+                if (function_exists('db_error')) {
+                    $msg .= "<br><b>Détail SQL :</b> " . htmlspecialchars(db_error());
+                }
+                alerte($msg, "danger");
             }
         } else {
             // Mettre à jour un étudiant existant
@@ -119,10 +167,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $params = [$etudiant['nom'], $etudiant['prenom'], $etudiant['matricule'], $etudiant['email']];
             
             // Ajouter les champs optionnels s'ils existent dans la table
-            $optional_fields = ['telephone', 'date_naissance', 'adresse'];
+            $optional_fields = array_values(array_intersect(
+                ['telephone', 'date_naissance', 'adresse'],
+                $colonnes_disponibles
+            ));
             foreach ($optional_fields as $field) {
                 $fields[] = $field;
                 $params[] = isset($etudiant[$field]) ? $etudiant[$field] : '';
+            }
+            if ($has_classe_id) {
+                $fields[] = 'classe_id';
+                $params[] = $classe_id_post;
             }
             
             // Construire la requête de mise à jour dynamiquement
@@ -273,6 +328,13 @@ include 'includes/header.php';
         </div>
     <?php endif; ?>
 
+    <?php if ($has_classe_id && empty($classes_list)): ?>
+        <div class="alert alert-warning">
+            Aucune promotion disponible (niveau et filière obligatoires). Créez des groupes dans
+            <a href="classes_etablissement.php">Promotions (LMD)</a> ou importez un fichier CSV.
+        </div>
+    <?php endif; ?>
+
     <div class="row">
         <div class="col-md-8">
                 </form>
@@ -346,16 +408,45 @@ include 'includes/header.php';
                             <div class="invalid-feedback">Veuillez entrer une adresse email valide.</div>
                         </div>
 
+                        <?php if ($has_telephone): ?>
                         <div class="mb-3">
                             <label for="telephone" class="form-label">Téléphone</label>
                             <input type="tel" class="form-control" id="telephone" name="telephone" value="<?php echo isset($etudiant['telephone']) ? htmlspecialchars($etudiant['telephone']) : ''; ?>">
                         </div>
+                        <?php endif; ?>
 
+                        <?php if ($has_date_naissance): ?>
                         <div class="mb-3">
                             <label for="date_naissance" class="form-label">Date de naissance</label>
                             <input type="date" class="form-control" id="date_naissance" name="date_naissance" value="<?php echo isset($etudiant['date_naissance']) ? htmlspecialchars($etudiant['date_naissance']) : ''; ?>">
                         </div>
+                        <?php endif; ?>
 
+                        <?php if ($has_classe_id): ?>
+                        <div class="mb-3">
+                            <label for="classe_id" class="form-label">Promotion (niveau · filière · groupe) <span class="text-danger">*</span></label>
+                            <select name="classe_id" id="classe_id" class="form-select" required>
+                                <option value="">— Choisir une promotion —</option>
+                                <?php foreach ($classes_list as $cl): ?>
+                                    <?php
+                                    $sel = isset($etudiant['classe_id']) && (int) $etudiant['classe_id'] === (int) $cl['id'];
+                                    $nv = trim((string) ($cl['niveau'] ?? ''));
+                                    $fi = trim((string) ($cl['filiere'] ?? ''));
+                                    $mid = array_values(array_filter([$nv, $fi], static function ($x) {
+                                        return $x !== '';
+                                    }));
+                                    $label = htmlspecialchars((string) $cl['code']) . ' — ';
+                                    $label .= $mid !== [] ? htmlspecialchars(implode(' · ', $mid)) . ' — ' : '';
+                                    $label .= htmlspecialchars((string) ($cl['nom'] ?? ''));
+                                    ?>
+                                    <option value="<?= (int) $cl['id'] ?>" <?= $sel ? 'selected' : '' ?>><?= $label ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <small class="text-muted">Référentiel : <a href="classes_etablissement.php">promotions &amp; groupes</a>.</small>
+                        </div>
+                        <?php endif; ?>
+
+                        <?php if ($has_adresse): ?>
                         <div class="form-group form-animation" style="animation-delay: 0.4s;">
                             <label for="adresse" class="form-label">Adresse</label>
                             <div class="input-group">
@@ -368,6 +459,7 @@ include 'includes/header.php';
                             <?php endif; ?>
 
                         </div>
+                        <?php endif; ?>
 
                         <div class="form-group form-animation" style="animation-delay: 0.45s;">
                             <label for="cours" class="form-label">Cours <span class="tooltip-icon" data-tooltip="Sélectionnez les cours auxquels l'étudiant est inscrit">?</span></label>

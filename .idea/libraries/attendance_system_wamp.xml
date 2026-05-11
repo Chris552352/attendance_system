@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="attendance_system_wamp">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/attendance_system_wamp.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

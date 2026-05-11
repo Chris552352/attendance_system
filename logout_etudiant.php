@@ -5,10 +5,13 @@
 
 session_start();
 
-// Détruire toutes les variables de session étudiantes
-unset($_SESSION['etudiant_id']);
-unset($_SESSION['etudiant_nom']);
-unset($_SESSION['etudiant_email']);
+foreach (['etudiant_id', 'etudiant_compte_id', 'etudiant_prenom', 'etudiant_nom', 'etudiant_email', 'etudiant_display'] as $k) {
+    unset($_SESSION[$k]);
+}
+
+// Détruire complètement la session
+session_unset();
+session_destroy();
 
 // Rediriger vers la page d'accueil
 header('Location: index.php');

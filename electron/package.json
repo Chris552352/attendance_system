@@ -1,0 +1,55 @@
+{
+  "name": "attendance-system",
+  "version": "1.2.0",
+  "description": "Système de Présence — WAMP localhost (QR, espace étudiant, connexion 12345)",
+  "main": "main.js",
+  "homepage": "./",
+  "author": "Your Name",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "33.0.0",
+    "electron-builder": "25.1.8"
+  },
+  "build": {
+    "appId": "com.attendance.system",
+    "productName": "Attendance System",
+    "directories": {
+      "buildResources": "assets"
+    },
+    "files": [
+      "main.js",
+      "preload.js"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Attendance System"
+    }
+  }
+}
+
+
+

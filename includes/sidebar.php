@@ -16,6 +16,9 @@
         <li><a href="etudiants.php" <?php echo basename($_SERVER['PHP_SELF']) === 'etudiants.php' ? 'class="active"' : ''; ?>><i class="fas fa-user-graduate"></i> Étudiants</a></li>
         <li><a href="enseignants.php" <?php echo basename($_SERVER['PHP_SELF']) === 'enseignants.php' ? 'class="active"' : ''; ?>><i class="fas fa-chalkboard-teacher"></i> Enseignants</a></li>
         <li><a href="cours.php" <?php echo basename($_SERVER['PHP_SELF']) === 'cours.php' ? 'class="active"' : ''; ?>><i class="fas fa-book"></i> Tous les Cours</a></li>
+        <li><a href="classes_etablissement.php" <?php echo basename($_SERVER['PHP_SELF']) === 'classes_etablissement.php' ? 'class="active"' : ''; ?>><i class="fas fa-university"></i> Promotions (LMD)</a></li>
+        <li><a href="salles.php" <?php echo basename($_SERVER['PHP_SELF']) === 'salles.php' ? 'class="active"' : ''; ?>><i class="fas fa-door-open"></i> Salles</a></li>
+        <li><a href="imports_csv.php" <?php echo in_array(basename($_SERVER['PHP_SELF']), ['imports_csv.php', 'import_promotions_csv.php', 'import_etudiants_csv.php'], true) ? 'class="active"' : ''; ?>><i class="fas fa-file-csv"></i> Import CSV</a></li>
         <?php else: ?>
         <!-- Options pour les enseignants -->
         <li><a href="mes_cours.php" <?php echo basename($_SERVER['PHP_SELF']) === 'mes_cours.php' ? 'class="active"' : ''; ?>><i class="fas fa-book"></i> Mes Cours</a></li>
@@ -24,6 +27,8 @@
         <!-- Options communes -->
         <li><a href="presence.php" <?php echo basename($_SERVER['PHP_SELF']) === 'presence.php' ? 'class="active"' : ''; ?>><i class="fas fa-clipboard-check"></i> Marquer Présence</a></li>
         <li><a href="generer_qr.php" <?php echo basename($_SERVER['PHP_SELF']) === 'generer_qr.php' ? 'class="active"' : ''; ?>><i class="fas fa-qrcode"></i> QR Code Présence</a></li>
+        <li><a href="presence_etablissement_superieur.php" <?php echo basename($_SERVER['PHP_SELF']) === 'presence_etablissement_superieur.php' ? 'class="active"' : ''; ?>><i class="fas fa-user-check"></i> Feuille d’émargement</a></li>
+        <li><a href="stats_presence_dashboard.php" <?php echo basename($_SERVER['PHP_SELF']) === 'stats_presence_dashboard.php' ? 'class="active"' : ''; ?>><i class="fas fa-chart-pie"></i> Stats présence</a></li>
         <li><a href="rapports.php" <?php echo basename($_SERVER['PHP_SELF']) === 'rapports.php' ? 'class="active"' : ''; ?>><i class="fas fa-chart-bar"></i> Rapports</a></li>
         
         <li><a href="gestion_justifications.php" <?php echo basename($_SERVER['PHP_SELF']) === 'gestion_justifications.php' ? 'class="active"' : ''; ?>><i class="fas fa-file-medical-alt"></i> Gestion Justifications</a></li>

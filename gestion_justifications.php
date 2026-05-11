@@ -7,46 +7,123 @@
 // Inclure les fichiers nécessaires
 require_once 'includes/auth.php';
 require_once 'config/database.php';
+require_once 'includes/justification_schema.php';
 
 // Vérifier l'authentification
 require_auth();
+
+ensure_justification_messaging_schema();
 
 // Initialiser les variables
 $message = '';
 $message_type = '';
 $justifications = [];
-$filtre_statut = isset($_GET['statut']) ? $_GET['statut'] : 'tous';
-$filtre_cours = isset($_GET['cours_id']) ? (int)$_GET['cours_id'] : 0;
 
-// Traitement de la validation/rejet d'une justification
+$filtre_statut = 'tous';
+if (isset($_GET['statut'])) {
+    $filtre_statut = $_GET['statut'];
+} elseif (isset($_POST['_filtre_statut'])) {
+    $filtre_statut = (string) $_POST['_filtre_statut'];
+}
+$filtre_cours = 0;
+if (isset($_GET['cours_id'])) {
+    $filtre_cours = (int) $_GET['cours_id'];
+} elseif (isset($_POST['_filtre_cours_id'])) {
+    $filtre_cours = (int) $_POST['_filtre_cours_id'];
+}
+
+// Traitement POST : message staff, validation ou rejet
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $justification_id = (int)$_POST['justification_id'];
-    $action = $_POST['action'];
-    $commentaire = securiser($_POST['commentaire'] ?? '');
-    
-    if ($action === 'valider' || $action === 'rejeter') {
-        $statut = ($action === 'valider') ? 'validee' : 'rejetee';
-        
-        // Mettre u00e0 jour le statut de la justification
-        $result = db_exec(
-            "UPDATE justifications SET statut = ?, validee_par = ?, date_validation = NOW(), commentaire = ? WHERE id = ?",
-            [$statut, $_SESSION['user_id'], $commentaire, $justification_id]
-        );
-        
-        // Si c'est une validation, mettre u00e0 jour le statut justifie dans la table presences
-        if ($result && $action === 'valider') {
-            $presence_id = db_query_single("SELECT presence_id FROM justifications WHERE id = ?", [$justification_id]);
-            if ($presence_id) {
-                db_exec("UPDATE presences SET justifie = TRUE WHERE id = ?", [$presence_id['presence_id']]);
+    $action = $_POST['action'] ?? '';
+
+    if ($action === 'message_staff') {
+        $justification_id = (int) ($_POST['justification_id'] ?? 0);
+        $msg_staff = trim((string) ($_POST['message_staff'] ?? ''));
+        if ($justification_id <= 0 || $msg_staff === '') {
+            $message = 'Veuillez saisir un message.';
+            $message_type = 'danger';
+        } else {
+            $row = db_query_single(
+                "SELECT j.id, c.enseignant_id, c.id as cours_id
+                 FROM justifications j
+                 INNER JOIN presences p ON j.presence_id = p.id
+                 INNER JOIN cours c ON p.cours_id = c.id
+                 WHERE j.id = ?",
+                [$justification_id]
+            );
+            $peut = false;
+            if ($row) {
+                if (est_admin()) {
+                    $peut = true;
+                } elseif (est_enseignant_du_cours((int) $row['cours_id'])) {
+                    $peut = true;
+                }
+            }
+            if (!$peut) {
+                $message = "Vous n'avez pas le droit d'envoyer un message sur cette justification.";
+                $message_type = 'danger';
+            } else {
+                try {
+                    db_exec(
+                        'INSERT INTO justification_messages (justification_id, sender_type, sender_id, message) VALUES (?, ?, ?, ?)',
+                        [$justification_id, 'staff', $_SESSION['user_id'], $msg_staff]
+                    );
+                    $message = 'Message envoyé.';
+                    $message_type = 'success';
+                } catch (Throwable $e) {
+                    $message = "Erreur lors de l'envoi du message.";
+                    $message_type = 'danger';
+                }
             }
         }
-        
-        if ($result) {
-            $message = "La justification a u00e9té " . ($action === 'valider' ? 'validée' : 'rejetée') . " avec succès.";
-            $message_type = 'success';
-        } else {
-            $message = "Erreur lors de la mise u00e0 jour de la justification.";
+    } elseif ($action === 'valider' || $action === 'rejeter') {
+        $justification_id = (int) ($_POST['justification_id'] ?? 0);
+        $commentaire = securiser($_POST['commentaire'] ?? '');
+
+        $peut_traiter = false;
+        if ($justification_id > 0) {
+            $row = db_query_single(
+                "SELECT j.id, c.enseignant_id
+                 FROM justifications j
+                 INNER JOIN presences p ON j.presence_id = p.id
+                 INNER JOIN cours c ON p.cours_id = c.id
+                 WHERE j.id = ?",
+                [$justification_id]
+            );
+            if ($row) {
+                if (est_admin()) {
+                    $peut_traiter = true;
+                } elseif (est_enseignant() && (int) $row['enseignant_id'] === (int) $_SESSION['user_id']) {
+                    $peut_traiter = true;
+                }
+            }
+        }
+
+        if (!$peut_traiter) {
+            $message = "Vous n'avez pas le droit de valider ou rejeter cette justification.";
             $message_type = 'danger';
+        } else {
+            $statut = ($action === 'valider') ? 'validee' : 'rejetee';
+
+            $result = db_exec(
+                'UPDATE justifications SET statut = ?, validee_par = ?, date_validation = NOW(), commentaire = ? WHERE id = ?',
+                [$statut, $_SESSION['user_id'], $commentaire, $justification_id]
+            );
+
+            if ($result && $action === 'valider') {
+                $presence_row = db_query_single('SELECT presence_id FROM justifications WHERE id = ?', [$justification_id]);
+                if ($presence_row) {
+                    db_exec('UPDATE presences SET justifie = TRUE WHERE id = ?', [$presence_row['presence_id']]);
+                }
+            }
+
+            if ($result) {
+                $message = 'La justification a été ' . ($action === 'valider' ? 'validée' : 'rejetée') . ' avec succès.';
+                $message_type = 'success';
+            } else {
+                $message = 'Erreur lors de la mise à jour de la justification.';
+                $message_type = 'danger';
+            }
         }
     }
 }
@@ -61,7 +138,7 @@ if ($_SESSION['user_role'] === 'admin') {
 // Construire la requête pour récupérer les justifications
 $sql = "SELECT j.*, p.date_presence, p.statut as presence_statut, p.justifie,
                e.nom as etudiant_nom, e.prenom as etudiant_prenom, e.matricule,
-               c.nom as cours_nom, c.code as cours_code,
+               c.nom as cours_nom, c.code as cours_code, c.enseignant_id as cours_enseignant_id,
                u.nom as validateur_nom
         FROM justifications j
         JOIN presences p ON j.presence_id = p.id
@@ -90,7 +167,7 @@ if ($_SESSION['user_role'] !== 'admin') {
     $params[] = $_SESSION['user_id'];
 }
 
-// Ajouter les clauses WHERE u00e0 la requête
+// Ajouter les clauses WHERE à la requête
 if (!empty($where_clauses)) {
     $sql .= " WHERE " . implode(" AND ", $where_clauses);
 }
@@ -100,6 +177,36 @@ $sql .= " ORDER BY j.date_soumission DESC";
 
 // Exécuter la requête
 $justifications = db_query($sql, $params);
+
+$messagesByJustif = [];
+if (!empty($justifications)) {
+    $ids = [];
+    foreach ($justifications as $jj) {
+        $ids[] = (int) $jj['id'];
+    }
+    $ids = array_values(array_unique(array_filter($ids)));
+    if (!empty($ids)) {
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        try {
+            $msgs = db_query(
+                "SELECT jm.*,
+                        u.prenom AS staff_prenom, u.nom AS staff_nom,
+                        et.prenom AS etu_prenom, et.nom AS etu_nom
+                 FROM justification_messages jm
+                 LEFT JOIN utilisateurs u ON jm.sender_type = 'staff' AND jm.sender_id = u.id
+                 LEFT JOIN etudiants et ON jm.sender_type = 'etudiant' AND jm.sender_id = et.id
+                 WHERE jm.justification_id IN ($placeholders)
+                 ORDER BY jm.justification_id ASC, jm.created_at ASC",
+                $ids
+            );
+            foreach ($msgs as $m) {
+                $jid = (int) $m['justification_id'];
+                $messagesByJustif[$jid][] = $m;
+            }
+        } catch (Throwable $e) {
+        }
+    }
+}
 
 // Inclure le header
 include 'includes/header.php';
@@ -183,6 +290,36 @@ include 'includes/header.php';
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: none; }
 }
+.justif-msg-thread {
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 0.5rem;
+  background: #fafafa;
+  border-radius: 0.75rem;
+  border: 1px solid #e3e3e3;
+}
+.justif-msg {
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 0.85rem;
+  max-width: 94%;
+  word-break: break-word;
+}
+.justif-msg.staff {
+  margin-left: auto;
+  background: #e3f2fd;
+  border: 1px solid #90caf9;
+}
+.justif-msg.student {
+  margin-right: auto;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+}
+.justif-msg-meta {
+  font-size: 0.78rem;
+  color: #666;
+  margin-bottom: 0.3rem;
+}
 </style>
 <div class="justif-full-bg">
     <img src="Nouveau dossier/images.png" alt="Décor justifications">
@@ -252,7 +389,7 @@ include 'includes/header.php';
                         <thead style="background: linear-gradient(to right, #1976d2, #2196f3); color: white;">
                             <tr>
                                 <th>Date Absence</th>
-                                <th>u00c9tudiant</th>
+                                <th>Étudiant</th>
                                 <th>Cours</th>
                                 <th>Justification</th>
                                 <th>Date Soumission</th>
@@ -262,6 +399,14 @@ include 'includes/header.php';
                         </thead>
                         <tbody>
                             <?php foreach ($justifications as $j): ?>
+                                <?php
+                                $jid = (int) $j['id'];
+                                $thread = $messagesByJustif[$jid] ?? [];
+                                $peut_traiter_ui = $j['statut'] === 'en_attente'
+                                    && (est_admin() || (est_enseignant() && (int) $j['cours_enseignant_id'] === (int) $_SESSION['user_id']));
+                                $peut_message = est_admin()
+                                    || (est_enseignant() && (int) $j['cours_enseignant_id'] === (int) $_SESSION['user_id']);
+                                ?>
                                 <tr>
                                     <td><?php echo date('d/m/Y', strtotime($j['date_presence'])); ?></td>
                                     <td>
@@ -276,38 +421,100 @@ include 'includes/header.php';
                                         
                                         <!-- Modal pour afficher la justification -->
                                         <div class="modal fade" id="justificationModal<?php echo $j['id']; ?>" tabindex="-1" aria-labelledby="justificationModalLabel<?php echo $j['id']; ?>" aria-hidden="true">
-                                            <div class="modal-dialog">
+                                            <div class="modal-dialog modal-lg modal-dialog-scrollable">
                                                 <div class="modal-content">
                                                     <div class="modal-header" style="background-color: #1976d2; color: white;">
                                                         <h5 class="modal-title" id="justificationModalLabel<?php echo $j['id']; ?>">Justification d'absence</h5>
                                                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                                                     </div>
                                                     <div class="modal-body">
-                                                        <p><strong>u00c9tudiant:</strong> <?php echo htmlspecialchars($j['etudiant_prenom'] . ' ' . $j['etudiant_nom']); ?></p>
-                                                        <p><strong>Cours:</strong> <?php echo htmlspecialchars($j['cours_nom'] . ' (' . $j['cours_code'] . ')'); ?></p>
-                                                        <p><strong>Date d'absence:</strong> <?php echo date('d/m/Y', strtotime($j['date_presence'])); ?></p>
-                                                        <p><strong>Date de soumission:</strong> <?php echo date('d/m/Y H:i', strtotime($j['date_soumission'])); ?></p>
-                                                        <div class="card">
+                                                        <p><strong>Étudiant :</strong> <?php echo htmlspecialchars($j['etudiant_prenom'] . ' ' . $j['etudiant_nom']); ?></p>
+                                                        <p><strong>Cours :</strong> <?php echo htmlspecialchars($j['cours_nom'] . ' (' . $j['cours_code'] . ')'); ?></p>
+                                                        <p><strong>Date d'absence :</strong> <?php echo date('d/m/Y', strtotime($j['date_presence'])); ?></p>
+                                                        <p><strong>Date de soumission :</strong> <?php echo date('d/m/Y H:i', strtotime($j['date_soumission'])); ?></p>
+                                                        <?php if (!empty($j['piece_path'])): ?>
+                                                            <p class="mb-2">
+                                                                <a class="btn btn-sm btn-outline-secondary" href="telecharger_piece_justification.php?id=<?php echo (int) $j['id']; ?>" target="_blank" rel="noopener">
+                                                                    <i class="fas fa-paperclip"></i> Télécharger la pièce jointe
+                                                                    <?php if (!empty($j['piece_nom_original'])): ?>
+                                                                        <span class="text-muted">(<?php echo htmlspecialchars($j['piece_nom_original']); ?>)</span>
+                                                                    <?php endif; ?>
+                                                                </a>
+                                                            </p>
+                                                        <?php endif; ?>
+                                                        <div class="card mb-3">
                                                             <div class="card-header bg-light">Contenu de la justification</div>
                                                             <div class="card-body">
-                                                                <?php echo nl2br(htmlspecialchars($j['contenu'])); ?>
+                                                                <?php
+                                                                if (empty($j['contenu'])) {
+                                                                    echo "<span class='text-muted'>Aucun motif saisi</span>";
+                                                                } else {
+                                                                    echo nl2br(htmlspecialchars($j['contenu']));
+                                                                }
+                                                                ?>
                                                             </div>
                                                         </div>
+
+                                                        <h6 class="mt-3"><i class="fas fa-comments"></i> Messagerie</h6>
+                                                        <div class="justif-msg-thread mb-3">
+                                                            <?php if (empty($thread)): ?>
+                                                                <p class="text-muted small mb-0">Aucun échange pour l’instant.</p>
+                                                            <?php else: ?>
+                                                                <?php foreach ($thread as $m): ?>
+                                                                    <?php
+                                                                    $is_staff = ($m['sender_type'] ?? '') === 'staff';
+                                                                    if ($is_staff) {
+                                                                        $who = trim(($m['staff_prenom'] ?? '') . ' ' . ($m['staff_nom'] ?? ''));
+                                                                        if ($who === '') {
+                                                                            $who = 'Équipe';
+                                                                        }
+                                                                    } else {
+                                                                        $who = trim(($m['etu_prenom'] ?? '') . ' ' . ($m['etu_nom'] ?? ''));
+                                                                        if ($who === '') {
+                                                                            $who = $j['etudiant_prenom'] . ' ' . $j['etudiant_nom'];
+                                                                        }
+                                                                    }
+                                                                    ?>
+                                                                    <div class="justif-msg <?php echo $is_staff ? 'staff' : 'student'; ?>">
+                                                                        <div class="justif-msg-meta">
+                                                                            <?php echo $is_staff ? '<i class="fas fa-user-tie"></i>' : '<i class="fas fa-user-graduate"></i>'; ?>
+                                                                            <?php echo htmlspecialchars($who); ?>
+                                                                            · <?php echo date('d/m/Y H:i', strtotime($m['created_at'])); ?>
+                                                                        </div>
+                                                                        <div><?php echo nl2br(htmlspecialchars($m['message'])); ?></div>
+                                                                    </div>
+                                                                <?php endforeach; ?>
+                                                            <?php endif; ?>
+                                                        </div>
+
+                                                        <?php if ($peut_message): ?>
+                                                            <form method="post" action="">
+                                                                <input type="hidden" name="_filtre_statut" value="<?php echo htmlspecialchars($filtre_statut); ?>">
+                                                                <input type="hidden" name="_filtre_cours_id" value="<?php echo (int) $filtre_cours; ?>">
+                                                                <input type="hidden" name="justification_id" value="<?php echo (int) $j['id']; ?>">
+                                                                <input type="hidden" name="action" value="message_staff">
+                                                                <div class="mb-2">
+                                                                    <label class="form-label" for="message_staff_<?php echo (int) $j['id']; ?>">Répondre à l’étudiant</label>
+                                                                    <textarea class="form-control" id="message_staff_<?php echo (int) $j['id']; ?>" name="message_staff" rows="3" required placeholder="Votre message…"></textarea>
+                                                                </div>
+                                                                <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-paper-plane"></i> Envoyer</button>
+                                                            </form>
+                                                        <?php endif; ?>
                                                         
                                                         <?php if ($j['statut'] !== 'en_attente'): ?>
                                                             <div class="mt-3">
-                                                                <p><strong>Statut:</strong> 
+                                                                <p><strong>Statut :</strong> 
                                                                     <?php if ($j['statut'] === 'validee'): ?>
                                                                         <span class="badge bg-success">Validée</span>
                                                                     <?php else: ?>
                                                                         <span class="badge bg-danger">Rejetée</span>
                                                                     <?php endif; ?>
                                                                 </p>
-                                                                <p><strong>Traitée par:</strong> <?php echo htmlspecialchars($j['validateur_nom'] ?? 'Non spécifié'); ?></p>
-                                                                <p><strong>Date de traitement:</strong> <?php echo $j['date_validation'] ? date('d/m/Y H:i', strtotime($j['date_validation'])) : 'Non spécifié'; ?></p>
+                                                                <p><strong>Traitée par :</strong> <?php echo htmlspecialchars($j['validateur_nom'] ?? 'Non spécifié'); ?></p>
+                                                                <p><strong>Date de traitement :</strong> <?php echo $j['date_validation'] ? date('d/m/Y H:i', strtotime($j['date_validation'])) : 'Non spécifié'; ?></p>
                                                                 <?php if (!empty($j['commentaire'])): ?>
                                                                     <div class="card">
-                                                                        <div class="card-header bg-light">Commentaire</div>
+                                                                        <div class="card-header bg-light">Commentaire de décision</div>
                                                                         <div class="card-body">
                                                                             <?php echo nl2br(htmlspecialchars($j['commentaire'])); ?>
                                                                         </div>
@@ -334,7 +541,7 @@ include 'includes/header.php';
                                         <?php endif; ?>
                                     </td>
                                     <td>
-                                        <?php if ($j['statut'] === 'en_attente'): ?>
+                                        <?php if ($peut_traiter_ui): ?>
                                             <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#validerModal<?php echo $j['id']; ?>">
                                                 <i class="fas fa-check"></i> Valider
                                             </button>
@@ -351,10 +558,12 @@ include 'includes/header.php';
                                                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                                                         </div>
                                                         <form method="POST" action="">
+                                                            <input type="hidden" name="_filtre_statut" value="<?php echo htmlspecialchars($filtre_statut); ?>">
+                                                            <input type="hidden" name="_filtre_cours_id" value="<?php echo (int) $filtre_cours; ?>">
                                                             <div class="modal-body">
                                                                 <input type="hidden" name="justification_id" value="<?php echo $j['id']; ?>">
                                                                 <input type="hidden" name="action" value="valider">
-                                                                <p>u00cates-vous sûr de vouloir valider cette justification d'absence ?</p>
+                                                                <p>Êtes-vous sûr de vouloir valider cette justification d'absence ?</p>
                                                                 <div class="mb-3">
                                                                     <label for="commentaire<?php echo $j['id']; ?>_valider" class="form-label">Commentaire (optionnel)</label>
                                                                     <textarea class="form-control" id="commentaire<?php echo $j['id']; ?>_valider" name="commentaire" rows="3"></textarea>
@@ -378,10 +587,12 @@ include 'includes/header.php';
                                                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                                                         </div>
                                                         <form method="POST" action="">
+                                                            <input type="hidden" name="_filtre_statut" value="<?php echo htmlspecialchars($filtre_statut); ?>">
+                                                            <input type="hidden" name="_filtre_cours_id" value="<?php echo (int) $filtre_cours; ?>">
                                                             <div class="modal-body">
                                                                 <input type="hidden" name="justification_id" value="<?php echo $j['id']; ?>">
                                                                 <input type="hidden" name="action" value="rejeter">
-                                                                <p>u00cates-vous sûr de vouloir rejeter cette justification d'absence ?</p>
+                                                                <p>Êtes-vous sûr de vouloir rejeter cette justification d'absence ?</p>
                                                                 <div class="mb-3">
                                                                     <label for="commentaire<?php echo $j['id']; ?>_rejeter" class="form-label">Motif du rejet</label>
                                                                     <textarea class="form-control" id="commentaire<?php echo $j['id']; ?>_rejeter" name="commentaire" rows="3" required></textarea>
@@ -395,6 +606,8 @@ include 'includes/header.php';
                                                     </div>
                                                 </div>
                                             </div>
+                                        <?php elseif ($j['statut'] === 'en_attente'): ?>
+                                            <span class="text-muted small">En attente</span>
                                         <?php else: ?>
                                             <button type="button" class="btn btn-sm btn-outline-secondary" disabled>
                                                 <i class="fas fa-check"></i> Déjà traitée
@@ -415,3 +628,6 @@ include 'includes/header.php';
 // Inclure le footer
 include 'includes/footer.php';
 ?>
+
+<!-- Bootstrap JS (nécessaire pour les modals) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>

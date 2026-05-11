@@ -1,0 +1,87 @@
+📦 SETUP COMPLET - GUIDE D'UTILISATION
+
+════════════════════════════════════════════════════════════════
+
+Vous avez 2 fichiers dans le dossier "installer":
+
+1️⃣  install_complete.bat
+    → Solution RAPIDE et SIMPLE
+    → Lance tout automatiquement
+    → RECOMMANDÉ ⭐
+
+2️⃣  installer.nsi
+    → Script NSIS (avancé)
+    → Pour créer un setup professionnel
+    → Besoin de compiler avec NSIS
+
+════════════════════════════════════════════════════════════════
+
+🚀 OPTION 1: UTILISER LE .BAT (IMMÉDIAT)
+
+Étapes:
+1. Double-cliquez sur: install_complete.bat
+2. Attendez l'installation (environ 30 secondes)
+3. L'application s'ouvre automatiquement
+4. C'est fini!
+
+Avantages:
+✅ Pas de compilation requise
+✅ Fonctionne directement
+✅ Configuration automatique
+✅ Import BD automatique
+
+════════════════════════════════════════════════════════════════
+
+🏗️  OPTION 2: CRÉER UN SETUP PROFESSIONNEL
+
+Si vous voulez un vrai setup.exe avec assistant:
+
+1. Téléchargez NSIS: https://nsis.sourceforge.io/
+2. Installez NSIS
+3. Cliquez droit sur: installer.nsi
+4. "Compile with NSIS"
+5. Un setup.exe sera créé
+
+Avantages:
+✅ Interface professionnelle
+✅ Gestion des versions
+✅ Désinsta ll facile
+❌ Nécessite NSIS
+
+════════════════════════════════════════════════════════════════
+
+⚠️  PRÉREQUIS:
+
+✅ WAMP doit être installé sur la machine
+   → Si pas encore: https://wampserver.com/
+✅ Vous devez avoir les permissions admin
+   → Sinon, vous ne pouvez pas importer la BD
+
+════════════════════════════════════════════════════════════════
+
+🎯 MON RECOMMANDATION:
+
+Pour une démonstration/soutenance:
+→ Utilisez install_complete.bat
+→ C'est plus rapide et ça marche du premier coup
+
+Pour une distribution officielle:
+→ Compilez avec NSIS
+→ C'est plus professionnel
+
+════════════════════════════════════════════════════════════════
+
+❓ QUESTIONS?
+
+Q: Ça installe quoi exactement?
+R: L'app PHP, la BD (import automatique), et configure WAMP
+
+Q: C'est où après l'installation?
+R: La BD est créée dans MySQL
+   L'app est accessible sur http://localhost/attendance_system/
+
+Q: Je peux le partager?
+R: Oui! Juste le .bat ou le setup.exe compilé
+
+════════════════════════════════════════════════════════════════
+

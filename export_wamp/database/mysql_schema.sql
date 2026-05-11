@@ -1,5 +1,4 @@
--- MySQL Schema for Attendance System
--- For local WAMP installation
+
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -42,6 +41,9 @@ CREATE TABLE `etudiants` (
   `nom` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   `prenom` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   `email` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `telephone` varchar(30) DEFAULT NULL,
+  `date_naissance` date DEFAULT NULL,
+  `adresse` varchar(255) DEFAULT NULL,
   `date_inscription` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `matricule` (`matricule`),
@@ -59,6 +61,20 @@ CREATE TABLE `inscriptions` (
   KEY `cours_id` (`cours_id`),
   CONSTRAINT `inscriptions_ibfk_1` FOREIGN KEY (`etudiant_id`) REFERENCES `etudiants` (`id`),
   CONSTRAINT `inscriptions_ibfk_2` FOREIGN KEY (`cours_id`) REFERENCES `cours` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Table: seances (pour les QR codes)
+CREATE TABLE `seances` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `nom_cours` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `enseignant_id` int(11) NOT NULL,
+  `token` varchar(255) COLLATE utf8mb4_unicode_ci UNIQUE NOT NULL,
+  `expiration` timestamp NOT NULL,
+  `date_creation` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `active` tinyint(1) DEFAULT '1',
+  PRIMARY KEY (`id`),
+  KEY `enseignant_id` (`enseignant_id`),
+  CONSTRAINT `seances_ibfk_1` FOREIGN KEY (`enseignant_id`) REFERENCES `utilisateurs` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Table: presences
@@ -82,21 +98,6 @@ CREATE TABLE `presences` (
   CONSTRAINT `presences_ibfk_2` FOREIGN KEY (`cours_id`) REFERENCES `cours` (`id`),
   CONSTRAINT `presences_ibfk_3` FOREIGN KEY (`enregistre_par`) REFERENCES `utilisateurs` (`id`),
   CONSTRAINT `presences_ibfk_4` FOREIGN KEY (`seance_id`) REFERENCES `seances` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Table: seances (pour les QR codes)
-CREATE TABLE `seances` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `nom_cours` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `enseignant_id` int(11) NOT NULL,
-  `token` varchar(255) COLLATE utf8mb4_unicode_ci UNIQUE NOT NULL,
-  `expiration` timestamp NOT NULL,
-  `date_creation` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `active` tinyint(1) DEFAULT '1',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `token` (`token`),
-  KEY `enseignant_id` (`enseignant_id`),
-  CONSTRAINT `seances_ibfk_1` FOREIGN KEY (`enseignant_id`) REFERENCES `utilisateurs` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Insert sample data

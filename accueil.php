@@ -111,7 +111,7 @@ include 'includes/header.php';
                     </div>
                     <div class="stat-box">
                         <i class="fas fa-calendar-check stat-box-icon"></i>
-                        <div class="stat-number"><?= number_format($stats['moyenne_presences_jour'], 1) ?></div>
+                        <div class="stat-number"><?= number_format($stats['moyenne_presences_jour'] ?? 0, 1) ?></div>
                         <div class="stat-label">Moyenne/Jour</div>
                     </div>
                      <!--<div class="stat-box">

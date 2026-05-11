@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $erreur = "Erreur lors de la création de la séance.";
             }
         } else {
-            $erreur = "Cours non trouvé.";
+            $erreur = "Erreur : la matière ou le cours demandé n'existe pas.";
         }
     } else {
         $erreur = "Veuillez sélectionner un cours.";
@@ -63,10 +63,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Récupérer les cours de l'enseignant
+if (!isset($_SESSION['role'])) { $_SESSION['role'] = ''; }
+if ($_SESSION['role'] === 'admin') {
+    $cours_enseignant = db_query("SELECT * FROM cours ORDER BY nom");
+} else {
 $cours_enseignant = db_query(
     "SELECT * FROM cours WHERE enseignant_id = ? ORDER BY nom",
     [$_SESSION['user_id']]
 );
+}
 
 include 'includes/header.php';
 ?>
@@ -92,8 +97,8 @@ include 'includes/header.php';
                         </p>
                     </div>
 
-                    <?php if (isset($erreur)): ?>
-                        <div class="alert alert-danger">
+                    <?php if (isset($erreur) && !empty($erreur)): ?>
+                        <div class="alert alert-danger mt-4">
                             <i class="fas fa-exclamation-triangle"></i> <?= htmlspecialchars($erreur) ?>
                         </div>
                     <?php endif; ?>

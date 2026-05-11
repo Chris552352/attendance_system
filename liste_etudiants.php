@@ -6,9 +6,12 @@
 // Inclure les fichiers nécessaires
 require_once 'includes/auth.php';
 require_once 'config/database.php';
+require_once 'includes/ensure_classes_etablissement_schema.php';
 
 // Vérifier l'authentification
 require_auth();
+
+ensure_classes_etablissement_schema();
 
 // Récupérer l'ID du cours
 $cours_id = isset($_GET['cours_id']) ? (int)$_GET['cours_id'] : 0;
@@ -43,12 +46,13 @@ if (!$cours) {
 
 // Récupérer la liste des étudiants inscrits au cours
 $etudiants = db_query("
-    SELECT e.*, 
+    SELECT e.*, cl.code AS classe_code, cl.nom AS classe_nom, cl.niveau AS classe_niveau, cl.filiere AS classe_filiere,
            (SELECT COUNT(*) FROM presences p WHERE p.etudiant_id = e.id AND p.cours_id = ? AND p.statut = 'present') as nb_presences,
            (SELECT COUNT(*) FROM presences p WHERE p.etudiant_id = e.id AND p.cours_id = ? AND p.statut = 'absent' AND p.justifie = FALSE) as absences_non_justifiees,
            (SELECT COUNT(*) FROM presences p WHERE p.etudiant_id = e.id AND p.cours_id = ? AND p.statut = 'absent' AND p.justifie = TRUE) as absences_justifiees
     FROM etudiants e
     JOIN inscriptions i ON e.id = i.etudiant_id
+    LEFT JOIN classes_etablissement cl ON e.classe_id = cl.id
     WHERE i.cours_id = ?
     ORDER BY e.nom, e.prenom
 ", [$cours_id, $cours_id, $cours_id, $cours_id]);
@@ -124,6 +128,7 @@ include 'includes/header.php';
                                 <th>Matricule</th>
                                 <th>Nom</th>
                                 <th>Prénom</th>
+                                <th>Promo</th>
                                 <th>Email</th>
                                 <th>Présences</th>
                                 <th>Absences</th>
@@ -141,6 +146,22 @@ include 'includes/header.php';
                                     <td><?= htmlspecialchars($etudiant['matricule']) ?></td>
                                     <td><?= htmlspecialchars($etudiant['nom']) ?></td>
                                     <td><?= htmlspecialchars($etudiant['prenom']) ?></td>
+                                    <td>
+                                        <?php if (!empty($etudiant['classe_code'])): ?>
+                                            <?php
+                                            $tt = array_values(array_filter([
+                                                trim((string) ($etudiant['classe_niveau'] ?? '')),
+                                                trim((string) ($etudiant['classe_filiere'] ?? '')),
+                                            ], static fn ($x) => $x !== ''));
+                                            $ttStr = $tt !== [] ? implode(' · ', $tt) : '';
+                                            ?>
+                                            <span class="badge bg-secondary" title="<?= htmlspecialchars($ttStr) ?>">
+                                                <?= htmlspecialchars($etudiant['classe_code']) ?>
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="text-muted">—</span>
+                                        <?php endif; ?>
+                                    </td>
                                     <td><?= htmlspecialchars($etudiant['email']) ?></td>
                                     <td>
                                         <span class="badge bg-success"><?= $etudiant['nb_presences'] ?></span>

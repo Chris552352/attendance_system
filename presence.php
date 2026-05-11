@@ -7,6 +7,79 @@
 require_once 'includes/auth.php';
 require_once 'config/database.php';
 
+// --- FLUX DE POINTAGE ÉTUDIANT PAR QR CODE ---
+if (isset($_GET['seance_id']) && isset($_GET['token'])) {
+    require_student_auth();
+    $seance_id = (int)$_GET['seance_id'];
+    $token = $_GET['token'];
+    $now = date('Y-m-d H:i:s');
+    $etudiant_id = $_SESSION['etudiant_id'];
+    $etudiant_nom = $_SESSION['etudiant_nom'];
+    $etudiant_email = $_SESSION['etudiant_email'];
+    $erreur_presence = '';
+    $confirmation = false;
+
+    // 1. Vérifier la séance et le token
+    $seance = db_query_single("SELECT s.*, c.nom as cours_nom, c.code as cours_code, c.id as cours_id FROM seances s JOIN cours c ON s.cours_id = c.id WHERE s.id = ? AND s.token = ?", [$seance_id, $token]);
+    if (!$seance) {
+        $erreur_presence = "QR code invalide ou séance introuvable.";
+    } elseif ($now > $seance['expiration']) {
+        $erreur_presence = "Ce QR code a expiré. Veuillez demander à l'enseignant un nouveau code.";
+    } else {
+        // 2. Vérifier que l'étudiant est inscrit à ce cours
+        $inscrit = db_query_single("SELECT * FROM inscriptions WHERE etudiant_id = ? AND cours_id = ?", [$etudiant_id, $seance['cours_id']]);
+        if (!$inscrit) {
+            $erreur_presence = "Vous n'êtes pas inscrit à ce cours.";
+        } else {
+            // 3. Vérifier si déjà pointé
+            $deja_pointe = db_query_single("SELECT * FROM presences WHERE etudiant_id = ? AND seance_id = ?", [$etudiant_id, $seance_id]);
+            if ($deja_pointe) {
+                $erreur_presence = "Vous avez déjà validé votre présence pour cette séance.";
+            } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirmer_presence'])) {
+                // 4. Enregistrement de la présence
+                $result = db_exec("INSERT INTO presences (etudiant_id, cours_id, seance_id, date_presence, statut, enregistre_par) VALUES (?, ?, ?, ?, ?, ?)", [
+                    $etudiant_id,
+                    $seance['cours_id'],
+                    $seance_id,
+                    date('Y-m-d'),
+                    'present',
+                    null // enregistre_par = null pour auto-pointage étudiant
+                ]);
+                if ($result) {
+                    $confirmation = true;
+                } else {
+                    $erreur_presence = "Erreur lors de l'enregistrement de la présence. Veuillez réessayer.";
+                }
+            }
+        }
+    }
+    // Affichage du flux étudiant (HTML dédié)
+    include 'includes/header.php';
+    echo '<div class="container" style="max-width:600px; margin-top:40px;">';
+    echo '<div class="card shadow">';
+    echo '<div class="card-header bg-success text-white"><h4><i class="fas fa-qrcode"></i> Validation de présence</h4></div>';
+    echo '<div class="card-body">';
+    if ($erreur_presence) {
+        echo '<div class="alert alert-danger">' . htmlspecialchars($erreur_presence) . '</div>';
+        echo '<a href="dashboard_etudiant.php" class="btn btn-secondary">Retour</a>';
+    } elseif ($confirmation) {
+        echo '<div class="alert alert-success"><i class="fas fa-check-circle"></i> Votre présence a été enregistrée avec succès !</div>';
+        echo '<a href="dashboard_etudiant.php" class="btn btn-success">Retour au tableau de bord</a>';
+    } else {
+        // Affichage identité et confirmation
+        echo '<div class="mb-3"><strong>Étudiant :</strong> ' . htmlspecialchars($etudiant_nom) . '<br><strong>Email :</strong> ' . htmlspecialchars($etudiant_email) . '</div>';
+        echo '<div class="mb-3"><strong>Cours :</strong> ' . htmlspecialchars($seance['cours_nom']) . ' (' . htmlspecialchars($seance['cours_code']) . ')<br>';
+        echo '<strong>Date :</strong> ' . date('d/m/Y', strtotime($seance['date_seance'])) . '</div>';
+        echo '<form method="POST">';
+        echo '<button type="submit" name="confirmer_presence" class="btn btn-primary btn-lg"><i class="fas fa-check"></i> Confirmer ma présence</button>';
+        echo '</form>';
+    }
+    echo '</div></div></div>';
+    include 'includes/footer.php';
+    exit;
+}
+// --- FIN FLUX ÉTUDIANT ---
+
 // Vérifier l'authentification
 require_auth();
 
@@ -286,7 +359,31 @@ include 'includes/header.php';
                         </h5>
                     </div>
                     <div class="card-body">
-                        <?php if (empty($etudiants)): ?>
+                        <?php
+// DEBUG TEMPORAIRE
+if (isset($_GET['debug'])) {
+    echo '<pre style="background:#222;color:#0f0;padding:10px;">';
+    echo "<b>cours_id:</b> ".$cours_id."\n";
+    echo "<b>date:</b> ".$date."\n";
+    if ($etudiants === false) {
+        global $pdo;
+        if (isset($pdo) && $pdo instanceof PDO) {
+            $err = $pdo->errorInfo();
+            echo "<b>ERREUR SQL :</b> db_query a retourné false !\n";
+            echo "<b>SQLSTATE:</b> ".$err[0]."\n";
+            echo "<b>Code:</b> ".$err[1]."\n";
+            echo "<b>Message:</b> ".$err[2]."\n";
+        } else {
+            echo "<b>ERREUR SQL :</b> db_query a retourné false ! (Pas d'objet PDO global)\n";
+        }
+    } else {
+        echo "<b>etudiants (count):</b> ".count($etudiants)."\n";
+        var_dump($etudiants);
+    }
+    echo '</pre>';
+}
+?>
+<?php if (empty($etudiants)): ?>
                             <div class="alert alert-info">
                                 <i class="fas fa-info-circle"></i> Aucun étudiant inscrit à ce cours.
                             </div>
@@ -324,7 +421,7 @@ include 'includes/header.php';
                                         <thead class="table-dark">
                                             <tr>
                                                 <th>Matricule</th>
-                                                
+                                                <th>Nom</th>
                                                 <th>Prénom</th>
                                                 <th>Présence</th>
                                             </tr>

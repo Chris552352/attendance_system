@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Affichage du QR Code généré
  */
@@ -6,35 +7,74 @@
 session_start();
 require_once 'includes/auth.php';
 require_once 'config/database.php';
+require_once __DIR__ . '/includes/seance_mode.php';
+require_once __DIR__ . '/vendor/autoload.php';
+
+// --- QR Code Library ---
+use Endroid\QrCode\Builder\Builder;
+use Endroid\QrCode\Encoding\Encoding;
+use Endroid\QrCode\ErrorCorrectionLevel;
+use Endroid\QrCode\Writer\PngWriter;
 
 // Vérifier l'authentification
 if (!est_connecte()) {
     rediriger('login.php');
 }
 
-$seance_id = intval($_GET['seance']);
+$seance_id = intval($_GET['seance'] ?? 0);
 if (!$seance_id) {
     rediriger('generer_qr.php');
 }
 
 // Récupérer les informations de la séance
-$sql = "SELECT * FROM seances WHERE id = ? AND enseignant_id = ?";
+$sql = 'SELECT s.*, ts.mode_marquage AS ts_mode_marquage
+        FROM seances s
+        LEFT JOIN types_seances ts ON s.type_seance_id = ts.id
+        WHERE s.id = ? AND s.enseignant_id = ?';
 $seance = db_query_single($sql, [$seance_id, $_SESSION['user_id']]);
 
+$erreur_matiere = '';
 if (!$seance) {
-    rediriger('generer_qr.php');
+    $erreur_matiere = "Erreur : la matière ou la séance demandée n'existe pas.";
 }
 
-// Vérifier si la séance est encore active
-$est_active = strtotime($seance['expiration']) > time();
+$qr_etudiant_ok = $seance ? seance_etudiant_marquage_qr_autorise($seance) : false;
+
+// Vérifier si la séance est encore active (fenêtre QR étudiant)
+$est_active = $seance && $qr_etudiant_ok && strtotime($seance['expiration']) > time();
 
 // URL pour le QR code - Configuration réseau local
 require_once 'config_reseau.php';
-$qr_url = URL_BASE_QR . "/presence_qr.php?seance=" . $seance_id . "&token=" . $seance['token'];
+$qr_url = $seance ? URL_BASE_QR . '/presence_qr.php?seance=' . $seance_id . '&token=' . $seance['token'] : '';
 
-// Récupérer les présences pour cette séance
-$sql_presences = "SELECT COUNT(*) as total FROM presences WHERE cours_id = ? AND date_presence = CURRENT_DATE";
-$presences_count = db_query_single($sql_presences, [$seance_id])['total'] ?? 0;
+// --- Générer le QR code localement avec le Builder ---
+$qr_code_data_uri = '';
+if ($est_active) {
+    try {
+        // Nouvelle API pour Endroid QR Code 6.x
+        $builder = new Builder(
+            writer: new PngWriter(),
+            data: $qr_url,
+            encoding: new Encoding('UTF-8'),
+            errorCorrectionLevel: ErrorCorrectionLevel::High,
+            size: 300,
+            margin: 10
+        );
+        
+        $result = $builder->build();
+        $qr_code_data_uri = $result->getDataUri();
+    } catch (Exception $e) {
+        error_log('Erreur de génération QR Code: ' . $e->getMessage());
+        $qr_code_data_uri = ''; // Laisser l'image vide en cas d'erreur
+    }
+}
+
+// Présences pour cette séance (aujourd'hui)
+$presences_row = $seance ? db_query_single(
+    'SELECT COUNT(*) AS total FROM presences WHERE seance_id = ? AND date_presence = CURDATE()',
+    [$seance_id]
+) : null;
+$presences_count = (int) ($presences_row['total'] ?? 0);
 
 include 'includes/header.php';
 include 'includes/sidebar.php';
@@ -42,6 +82,11 @@ include 'includes/sidebar.php';
 
 <div class="main-content">
     <div class="container-fluid">
+        <?php if (!empty($erreur_matiere)): ?>
+            <div class="alert alert-danger mt-4">
+                <i class="fas fa-exclamation-triangle"></i> <?php echo htmlspecialchars($erreur_matiere); ?>
+            </div>
+        <?php else: ?>
         <div class="row">
             <div class="col-md-8">
                 <div class="card">
@@ -49,16 +94,25 @@ include 'includes/sidebar.php';
                         <h4><i class="fas fa-qrcode"></i> QR Code - <?php echo htmlspecialchars($seance['nom_cours']); ?></h4>
                     </div>
                     <div class="card-body text-center">
-                        <?php if ($est_active): ?>
+                        <?php if ($seance && !$qr_etudiant_ok): ?>
+                            <div class="alert alert-warning">
+                                <i class="fas fa-user-lock"></i>
+                                <strong>Mode examen / contrôle ou séance manuelle</strong> — les étudiants ne peuvent pas pointer via ce QR.
+                            </div>
+                            <p class="text-start">Utilisez la feuille d’émargement pour enregistrer les présences :</p>
+                            <a href="presence_etablissement_superieur.php?seance_id=<?php echo (int) $seance_id; ?>" class="btn btn-primary mb-3">
+                                <i class="fas fa-clipboard-list"></i> Feuille d’émargement enseignant
+                            </a>
+                        <?php elseif ($est_active && !empty($qr_code_data_uri)): ?>
                             <div class="alert alert-success">
                                 <i class="fas fa-check-circle"></i> 
                                 <strong>QR Code Actif</strong> - Expire le <?php echo date('d/m/Y à H:i', strtotime($seance['expiration'])); ?>
                             </div>
                             
-                            <!-- QR Code généré avec une librairie simple -->
+                            <!-- QR Code généré localement -->
                             <div class="qr-code-container p-4">
                                 <div style="background: white; padding: 20px; border-radius: 10px; display: inline-block;">
-                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=<?php echo urlencode($qr_url); ?>" 
+                                    <img src="<?php echo $qr_code_data_uri; ?>" 
                                          alt="QR Code" class="img-fluid">
                                 </div>
                             </div>
@@ -72,20 +126,34 @@ include 'includes/sidebar.php';
                                 <a href="<?php echo htmlspecialchars($qr_url); ?>" class="btn btn-info" target="_blank">
                                     <i class="fas fa-external-link-alt"></i> Tester le lien
                                 </a>
+                                <a href="suivi_presences_temps_reel.php?seance=<?php echo $seance_id; ?>" class="btn btn-success">
+                                    <i class="fas fa-users"></i> Suivi en temps réel
+                                </a>
                                 <button onclick="window.print()" class="btn btn-secondary">
                                     <i class="fas fa-print"></i> Imprimer
                                 </button>
+                            </div>
+                        <?php elseif ($est_active && empty($qr_code_data_uri)): ?>
+                            <div class="alert alert-danger">
+                                <i class="fas fa-times-circle"></i> 
+                                <strong>Erreur de génération du QR Code.</strong><br>
+                                Veuillez vérifier la configuration du serveur et les logs d'erreur.
                             </div>
                         <?php else: ?>
                             <div class="alert alert-danger">
                                 <i class="fas fa-times-circle"></i> 
                                 <strong>QR Code Expiré</strong> - A expiré le <?php echo date('d/m/Y à H:i', strtotime($seance['expiration'])); ?>
                             </div>
-                            
                             <a href="generer_qr.php" class="btn btn-primary">
                                 <i class="fas fa-plus"></i> Générer un nouveau QR Code
                             </a>
                         <?php endif; ?>
+                        <form method="POST" action="cloturer_seance.php" onsubmit="return confirm('Clôturer la séance et marquer tous les absents ?');">
+                            <input type="hidden" name="seance_id" value="<?php echo $seance_id; ?>">
+                            <button type="submit" class="btn btn-danger w-100 mt-2">
+                                <i class="fas fa-user-slash"></i> Clôturer la séance et marquer les absents
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -104,7 +172,7 @@ include 'includes/sidebar.php';
                         <hr>
                         
                         <p><strong>Créé le :</strong><br>
-                           <?php echo date('d/m/Y à H:i', strtotime($seance['date_heure'])); ?></p>
+                           <?php echo date('d/m/Y à H:i', strtotime($seance['date_creation'])); ?></p>
                         
                         <p><strong>Expire le :</strong><br>
                            <?php echo date('d/m/Y à H:i', strtotime($seance['expiration'])); ?></p>
@@ -134,6 +202,7 @@ include 'includes/sidebar.php';
                 </div>
             </div>
         </div>
+        <?php endif; ?>
     </div>
 </div>
 

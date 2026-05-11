@@ -3,6 +3,11 @@
  * Page des rapports de présence
  */
 
+// Affichage des erreurs pour le debug
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 // Inclure les fichiers nécessaires
 require_once 'includes/auth.php';
 require_once 'config/database.php';
@@ -13,8 +18,8 @@ require_auth();
 // Récupérer les filtres
 $etudiant_id = isset($_GET['etudiant_id']) ? (int)$_GET['etudiant_id'] : 0;
 $cours_id = isset($_GET['cours_id']) ? (int)$_GET['cours_id'] : 0;
-$date_debut = isset($_GET['date_debut']) ? $_GET['date_debut'] : date('Y-m-01'); // Premier jour du mois
-$date_fin = isset($_GET['date_fin']) ? $_GET['date_fin'] : date('Y-m-t'); // Dernier jour du mois
+$date_debut = isset($_GET['date_debut']) ? $_GET['date_debut'] : '2000-01-01'; // Début très large
+$date_fin = isset($_GET['date_fin']) ? $_GET['date_fin'] : date('Y-m-d'); // Aujourd'hui
 
 // Vérifier si l'enseignant a le droit d'accéder à ce cours
 if ($cours_id > 0 && !est_admin()) {
@@ -64,41 +69,48 @@ if (!isset($table_error)) {
         SELECT 
             DATE_FORMAT(p.date_presence, '%d/%m/%Y') as date,
             e.id as etudiant_id, 
-            e.nom as etudiant_nom, 
+            COALESCE(e.nom, 'Étudiant supprimé') as etudiant_nom, 
             e.prenom as etudiant_prenom, 
             e.matricule,
             c.id as cours_id, 
-            c.nom as cours_nom, 
+            COALESCE(c.nom, 'Cours supprimé') as cours_nom, 
             c.code as cours_code,
             p.statut,
             p.justifie,
             p.id as presence_id,
-            (SELECT j.statut FROM justifications j WHERE j.presence_id = p.id ORDER BY j.date_soumission DESC LIMIT 1) as justification_statut
+            s.nom_cours as seance_nom
         FROM presences p
-        JOIN etudiants e ON p.etudiant_id = e.id
-        JOIN cours c ON p.cours_id = c.id
-        WHERE p.date_presence BETWEEN ? AND ?
+        LEFT JOIN etudiants e ON p.etudiant_id = e.id
+        LEFT JOIN cours c ON p.cours_id = c.id
+        LEFT JOIN seances s ON p.seance_id = s.id
     ";
+
+    $conditions = ["p.date_presence BETWEEN ? AND ?"];
     $params = [$date_debut, $date_fin];
     
-    // Ajouter des filtres supplémentaires si spécifiés
+    // Filtre par étudiant (sur la table presences uniquement)
     if ($etudiant_id > 0) {
-        $sql_base .= " AND p.etudiant_id = ?";
+        $conditions[] = "p.etudiant_id = ?";
         $params[] = $etudiant_id;
     }
     
+    // Filtre par cours (sur la table presences uniquement)
     if ($cours_id > 0) {
-        $sql_base .= " AND p.cours_id = ?";
+        $conditions[] = "p.cours_id = ?";
         $params[] = $cours_id;
+    }
+
+    // Filtre par enseignant (sur la table presences uniquement)
+    if (!est_admin()) {
+        $conditions[] = "p.cours_id IN (SELECT id FROM cours WHERE enseignant_id = ?)";
+        $params[] = $_SESSION['user_id'];
+    }
+
+    if (!empty($conditions)) {
+        $sql_base .= " WHERE " . implode(' AND ', $conditions);
     }
     
     $sql_base .= " ORDER BY p.date_presence DESC, e.nom, e.prenom, c.nom";
-    
-    // Ajouter un message de débogage pour voir la requête SQL et les paramètres
-    $debug_sql = $sql_base;
-    foreach ($params as $index => $param) {
-        $debug_sql = preg_replace('/\?/', "'$param'", $debug_sql, 1);
-    }
     
     // Exécuter la requête avec gestion d'erreur
     try {
@@ -323,9 +335,15 @@ include 'includes/header.php';
                     <i class="fas fa-info-circle"></i> Essayez de modifier vos critères de recherche.
                 </div>
             <?php elseif (empty($presences)): ?>
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle"></i> Aucune présence enregistrée pour cette période.
-                </div>
+                <?php
+                // Vérifier si la table presences est totalement vide
+                $nb_total = db_query_single("SELECT COUNT(*) as nb FROM presences");
+                if ($nb_total && $nb_total['nb'] == 0) {
+                    echo '<div class="alert alert-warning"><i class="fas fa-database"></i> La table des présences est vide. Ajoutez des présences pour voir les rapports.</div>';
+                } else {
+                    echo '<div class="alert alert-info"><i class="fas fa-info-circle"></i> Aucune présence enregistrée pour cette période ou ces filtres.</div>';
+                }
+                ?>
             <?php else: ?>
                 <div class="table-responsive">
                     <table class="table table-striped table-hover">
@@ -344,7 +362,17 @@ include 'includes/header.php';
                                     <td><?php echo htmlspecialchars($p['date']); ?></td>
                                     <td><?php echo htmlspecialchars($p['etudiant_nom'] . ' ' . $p['etudiant_prenom']); ?></td>
                                     <td><?php echo htmlspecialchars($p['matricule']); ?></td>
-                                    <td><?php echo htmlspecialchars($p['cours_nom'] . ' (' . $p['cours_code'] . ')'); ?></td>
+                                    <td>
+                                        <?php
+                                        if (!empty($p['seance_nom'])) {
+                                            echo htmlspecialchars($p['seance_nom']);
+                                        } elseif (!empty($p['cours_nom'])) {
+                                            echo htmlspecialchars($p['cours_nom']);
+                                        } else {
+                                            echo "<span class='text-muted'>Cours inconnu</span>";
+                                        }
+                                        ?>
+                                    </td>
                                     <td>
                                         <?php if ($p['statut'] === 'present'): ?>
                                             <span class="badge bg-success"><i class="fas fa-check-circle"></i> Présent</span>
@@ -365,19 +393,7 @@ include 'includes/header.php';
         </div>
     </div>
 
-    <div class="row mt-4 d-print-none">
-
-    </div>
-</div>
-
-<!-- Section Statistiques Présence/Absence -->
-<div class="card mt-4">
-    <div class="card-header bg-primary text-white">
-        <h5 class="card-title mb-0"><i class="fas fa-chart-pie"></i> Statistiques de Présence</h5>
-    </div>
-    <div class="card-body">
-        <canvas id="presenceChart" style="max-width: 400px;"></canvas>
-    </div>
+    <div class
 </div>
 
 <!-- Bouton Export CSV -->

@@ -1,0 +1,117 @@
+{
+  "@@locale": "fr",
+  "appTitle": "Présence étudiant",
+  "navPresence": "Présence",
+  "actionLogout": "Déconnexion",
+  "actionLogin": "Connexion",
+  "actionConnect": "Se connecter",
+  "studentLoginTitle": "Connexion étudiant",
+  "sameWifiHint": "Même réseau Wi‑Fi que le PC (WAMP).",
+  "serverLabel": "Serveur",
+  "serverNotConfiguredSnackbar": "Serveur non configuré. Scannez un QR pour configurer.",
+  "configureServer": "Configurer",
+  "changeServer": "Changer",
+  "notConfigured": "Non configuré",
+  "emailLabel": "Email",
+  "passwordLabel": "Mot de passe",
+  "emailRequired": "Email requis.",
+  "emailInvalid": "Email invalide.",
+  "passwordRequired": "Mot de passe requis.",
+  "unexpectedError": "Erreur inattendue.",
+  "scanQrButton": "Scanner le code QR",
+  "scanQrTitle": "Scanner le QR",
+  "torchTooltip": "Torche",
+  "afterScanBiometricHint": "Après le scan, vous devrez confirmer avec l’empreinte digitale, la reconnaissance faciale ou le code de votre téléphone.",
+  "myPresencesJustifications": "Mes présences & justifications",
+  "myProfile": "Mon profil",
+  "myCourses": "Mes cours",
+  "disconnect": "Se déconnecter",
+  "matriculeWithValue": "Matricule : {id}",
+  "@matriculeWithValue": {
+    "placeholders": {
+      "id": {"type": "String"}
+    }
+  },
+  "emailWithLabel": "Email : {email}",
+  "@emailWithLabel": {
+    "placeholders": {
+      "email": {"type": "String"}
+    }
+  },
+  "biometricCancelledSnackbar": "Pointage annulé : authentification requise.",
+  "biometricUnavailableSnackbar": "Biométrie indisponible sur cet appareil — configurez une empreinte ou un visage dans les paramètres pour plus de sécurité.",
+  "biometricOrSendInProgress": "Authentification biométrique ou envoi en cours…",
+  "frameQrHint": "Cadrez le QR affiché sur l’ordinateur de l’enseignant.",
+  "configureServerTitle": "Configurer le serveur",
+  "configuringServer": "Configuration…",
+  "scanQrForServerHint": "Scannez un QR de présence affiché par l’enseignant.\nL’app déduira automatiquement l’URL du serveur.",
+  "invalidQrSnackbar": "QR invalide.",
+  "biometricConfirmReason": "Confirmez votre identité pour enregistrer votre présence (empreinte ou visage).",
+  "retry": "Réessayer",
+  "noCoursesFound": "Aucun cours trouvé.",
+  "noPresencesYet": "Aucune présence enregistrée pour le moment.",
+  "mesPresencesTitle": "Mes présences & absences",
+  "refreshTooltip": "Actualiser",
+  "justifyAbsenceTitle": "Justifier une absence",
+  "dateLine": "Date : {date}",
+  "@dateLine": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "motifLabel": "Motif",
+  "fileTooLarge": "Fichier trop volumineux (max 5 Mo).",
+  "cannotReadFile": "Impossible de lire ce fichier.",
+  "removeAttachment": "Retirer la pièce jointe",
+  "cancel": "Annuler",
+  "send": "Envoyer",
+  "enterReason": "Saisissez un motif.",
+  "justificationPending": "Justification en attente",
+  "justificationAccepted": "Justification acceptée",
+  "justificationRejected": "Justification refusée",
+  "justified": "Justifiée",
+  "present": "Présent",
+  "absent": "Absent",
+  "yourMessage": "Votre message : {text}",
+  "@yourMessage": {
+    "placeholders": {
+      "text": {"type": "String"}
+    }
+  },
+  "staffReply": "Réponse : {text}",
+  "@staffReply": {
+    "placeholders": {
+      "text": {"type": "String"}
+    }
+  },
+  "sendJustification": "Envoyer une justification",
+  "messaging": "Messagerie",
+  "attachFileButton": "Ajouter une pièce jointe (PDF/JPG/PNG)",
+  "attachmentNamed": "Pièce jointe : {name}",
+  "@attachmentNamed": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "profileTitle": "Mon profil",
+  "firstName": "Prénom",
+  "lastName": "Nom",
+  "save": "Enregistrer",
+  "passwordChangeHint": "Le mot de passe se modifie côté web (si activé).",
+  "errorGeneric": "Erreur.",
+  "languageTitle": "Langue",
+  "languageFrench": "Français",
+  "languageEnglish": "Anglais",
+  "languageSystem": "Langue du système",
+  "teacherLabel": "Enseignant : {name}",
+  "@teacherLabel": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "authCancelledNoPresence": "Authentification annulée. La présence n’a pas été enregistrée.",
+  "presenceMarkedSuccess": "Présence marquée avec succès !",
+  "presenceMarkFailed": "Erreur lors du marquage de présence.",
+  "profileClassLabel": "Promotion (niveau · filière)",
+  "profileClassNotSet": "Non renseigné"
+}

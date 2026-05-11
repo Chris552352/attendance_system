@@ -1,0 +1,201 @@
+@startuml Architecture_Globale_Systeme_Presence
+title Architecture Globale - Système de Gestion de Présence Universitaire
+
+skinparam backgroundColor #FEFEFE
+skinparam handwritten false
+skinparam linetype ortho
+skinparam arrowColor #555555
+skinparam arrowThickness 2
+
+' ===== DÉFINITION DES COULEURS =====
+!define BACKEND_COLOR #E3F2FD
+!define BACKEND_BORDER #1976D2
+!define FRONTEND_COLOR #E8F5E8
+!define FRONTEND_BORDER #388E3C
+!define MOBILE_COLOR #FFF3E0
+!define MOBILE_BORDER #F57C00
+!define DATABASE_COLOR #FCE4EC
+!define DATABASE_BORDER #C2185B
+!define API_COLOR #F3E5F5
+!define API_BORDER #7B1FA2
+!define SECURITY_COLOR #FFEBEE
+!define SECURITY_BORDER #D32F2F
+
+skinparam package {
+    BackgroundColor #F5F5F5
+    BorderColor #424242
+    BorderThickness 2
+}
+
+skinparam rectangle {
+    BackgroundColor #FFFFFF
+    BorderColor #666666
+    BorderThickness 1
+    FontSize 11
+}
+
+' ===== COUCHE PRÉSENTATION =====
+
+package "PRESENTATION LAYER" as presentation {
+
+    rectangle "WEB FRONTEND" as web_frontend #FRONTEND_COLOR,#FRONTEND_BORDER {
+        rectangle "Admin Dashboard" as web_admin
+        rectangle "Teacher Interface" as web_teacher
+        rectangle "QR Code Management" as web_qr
+        rectangle "Reports & Stats" as web_stats
+    }
+
+    rectangle "MOBILE APPLICATION" as mobile_app #MOBILE_COLOR,#MOBILE_BORDER {
+        rectangle "Authentication" as mobile_auth
+        rectangle "QR Scanner" as mobile_qr_scan
+        rectangle "Mark Attendance" as mobile_mark
+        rectangle "History & Profile" as mobile_history
+    }
+}
+
+' ===== COUCHE API =====
+
+package "API LAYER" as api_layer {
+
+    rectangle "REST API ENDPOINTS" as api_rest #API_COLOR,#API_BORDER {
+        rectangle "Authentication API" as api_auth
+        rectangle "Student API" as api_student
+        rectangle "Course API" as api_course
+        rectangle "Attendance API" as api_attendance
+        rectangle "Justification API" as api_justif
+    }
+}
+
+' ===== COUCHE MÉTIER =====
+
+package "BUSINESS LOGIC LAYER" as business_layer {
+
+    rectangle "BACKEND PHP" as backend_php #BACKEND_COLOR,#BACKEND_BORDER {
+        rectangle "Session Management" as backend_session
+        rectangle "Authentication Service" as backend_auth
+        rectangle "Business Rules" as backend_rules
+        rectangle "Data Validation" as backend_validation
+    }
+}
+
+' ===== COUCHE SÉCURITÉ =====
+
+package "SECURITY LAYER" as security_layer {
+
+    rectangle "SECURITY MECHANISMS" as security_mech #SECURITY_COLOR,#SECURITY_BORDER {
+        rectangle "Password Hashing" as secure_hash
+        rectangle "Role-Based Access" as secure_rbac
+        rectangle "Input Sanitization" as secure_input
+        rectangle "Token Management" as secure_token
+        rectangle "Biometric Auth" as secure_biometric
+    }
+}
+
+' ===== COUCHE DONNÉES =====
+
+package "DATA LAYER" as data_layer {
+
+    rectangle "DATABASE" as db_main #DATABASE_COLOR,#DATABASE_BORDER {
+        rectangle "Users Management" as db_users
+        rectangle "Academic Data" as db_academic
+        rectangle "Attendance Records" as db_attendance
+        rectangle "Justifications" as db_justif
+    }
+}
+
+' ===== DÉTAIL DE LA BASE DE DONNÉES =====
+
+package "DATABASE SCHEMA" as db_detail {
+
+    rectangle "USER TABLES" as db_user_tables {
+        rectangle "utilisateurs" as tbl_users
+        rectangle "etudiants" as tbl_students
+        rectangle "comptes_etudiants" as tbl_student_accounts
+    }
+
+    rectangle "ACADEMIC TABLES" as db_academic_tables {
+        rectangle "classes_etablissement" as tbl_classes
+        rectangle "cours" as tbl_courses
+        rectangle "inscriptions" as tbl_inscriptions
+    }
+
+    rectangle "ATTENDANCE TABLES" as db_attendance_tables {
+        rectangle "seances" as tbl_sessions
+        rectangle "presences" as tbl_presences
+        rectangle "justifications" as tbl_justifications
+    }
+}
+
+' ===== INFRASTRUCTURE =====
+
+package "INFRASTRUCTURE" as infrastructure {
+
+    rectangle "WEB SERVER" as web_server #BACKEND_COLOR,#BACKEND_BORDER {
+        rectangle "Apache 2.4" as apache
+        rectangle "PHP 8.x" as php8
+        rectangle "HTTPS/SSL" as https
+    }
+
+    rectangle "DATABASE SERVER" as db_server #DATABASE_COLOR,#DATABASE_BORDER {
+        rectangle "MySQL 8.x" as mysql8
+        rectangle "InnoDB" as innodb
+        rectangle "UTF-8 MB4" as utf8
+    }
+
+    rectangle "MOBILE RUNTIME" as mobile_runtime #MOBILE_COLOR,#MOBILE_BORDER {
+        rectangle "Flutter SDK" as flutter
+        rectangle "Android/iOS" as mobile_os
+        rectangle "QR Scanner Lib" as qr_lib
+    }
+}
+
+' ===== CONNEXIONS TIER 1 -> TIER 2 =====
+
+web_frontend --> api_rest : HTTP/HTTPS
+mobile_app --> api_rest : JSON/REST
+
+' ===== CONNEXIONS TIER 2 -> TIER 3 =====
+
+api_rest --> backend_php : Business Logic
+web_frontend .[dashed].> backend_php : Direct Access
+
+' ===== CONNEXIONS TIER 3 -> TIER 4 =====
+
+backend_php --> db_main : MySQLi/PDO
+api_rest --> db_main : Database Query
+
+' ===== CONNEXIONS SÉCURITÉ =====
+
+web_frontend --> security_mech : Validation
+mobile_app --> security_mech : Authentication
+api_rest --> security_mech : Token Check
+backend_php --> security_mech : Security Rules
+
+' ===== CONNEXIONS DÉTAILS BD =====
+
+db_main --> db_user_tables : User Schema
+db_main --> db_academic_tables : Academic Schema
+db_main --> db_attendance_tables : Attendance Schema
+
+' ===== CONNEXIONS INFRASTRUCTURE =====
+
+web_server --> apache : Runs On
+web_server --> php8 : Executes
+backend_php --> web_server : Hosted By
+db_server --> mysql8 : Runs On
+db_main --> db_server : Stored In
+mobile_runtime --> flutter : Built With
+
+' ===== LÉGENDE =====
+
+package "LEGEND" as legend {
+    rectangle "Frontend Layer" as leg_front #FRONTEND_COLOR,#FRONTEND_BORDER
+    rectangle "Mobile Layer" as leg_mobile #MOBILE_COLOR,#MOBILE_BORDER
+    rectangle "Backend Layer" as leg_back #BACKEND_COLOR,#BACKEND_BORDER
+    rectangle "Database Layer" as leg_db #DATABASE_COLOR,#DATABASE_BORDER
+    rectangle "API Layer" as leg_api #API_COLOR,#API_BORDER
+    rectangle "Security Layer" as leg_sec #SECURITY_COLOR,#SECURITY_BORDER
+}
+
+@enduml
+

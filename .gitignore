@@ -1,0 +1,15 @@
+# On ignore les dossiers de configuration de l'éditeur de code
+.idea/
+.vscode/
+*.iml
+
+# On ignore les dossiers temporaires ou de build lourds
+node_modules/
+vendor/
+
+# Fichiers système inutiles
+Thumbs.db
+.DS_Store
+*.log
+# On ignore les builds et exécutables générés par Electron
+electron/dist/

@@ -1,223 +1,90 @@
 <?php
-// Force l'encodage en UTF-8 pour toute l'application
+/**
+ * Configuration base de données pour WAMP (MySQL uniquement)
+ */
+
+// Force l'encodage UTF-8
 ini_set('default_charset', 'UTF-8');
 
-/**
- * Configuration unifiée de la base de données (PostgreSQL sur Replit, MySQL sur WAMP)
- */
+// Configuration MySQL pour WAMP
+$host = 'localhost';
+$dbname = 'attendance_system';
+$username = 'root';
+$password = '';
+$port = 3306;
 
-// Variables globales pour la connexion
-$db_type = null;
+// Variables globales
 $pdo = null;
-$mysqli = null;
+$db_type = 'mysql';
 
-// Détecter l'environnement (Replit ou local)
-if (getenv('REPL_ID') || getenv('REPL_SLUG') || getenv('PGHOST')) {
-    // Nous sommes sur Replit, utiliser PostgreSQL
-    $db_type = 'postgresql';
+try {
+    // Connexion PDO MySQL
+    $dsn = "mysql:host=$host;port=$port;dbname=$dbname;charset=utf8mb4";
+    $options = [
+        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES   => false,
+    ];
     
-    // Utilisation des variables d'environnement de Replit pour PostgreSQL
-    $host = getenv('PGHOST');
-    $dbname = getenv('PGDATABASE');
-    $user = getenv('PGUSER');
-    $password = getenv('PGPASSWORD');
-    $port = getenv('PGPORT');
-
-    // Chaîne de connexion PDO pour PostgreSQL
-    $dsn = "pgsql:host=$host;port=$port;dbname=$dbname;user=$user;password=$password";
-
-    try {
-        // Connexion à la base de données avec PDO
-        $pdo = new PDO($dsn);
-        
-        // Configurer PDO pour lancer des exceptions en cas d'erreur
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        
-        // Utiliser le mode fetch associatif par défaut
-        $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-    } catch (PDOException $e) {
-        die("Erreur de connexion à la base de données PostgreSQL: " . $e->getMessage());
-    }
-} else {
-    // Configuration pour WAMPSERVER (environnement local)
-    $db_type = 'mysql';
-    $host = 'localhost';
-    $dbname = 'attendance_system';
-    $user = 'root';  // Utilisateur par défaut de WAMP
-    $password = '';  // Mot de passe par défaut généralement vide sur WAMP
-    $port = 3306;    // Port par défaut de MySQL
-
-    // Connexion à la base de données MySQL avec MySQLi
-    $mysqli = new mysqli($host, $user, $password, $dbname, $port);
-
-    // Vérifier la connexion
-    if ($mysqli->connect_error) {
-        die("Erreur de connexion à la base de données MySQL: " . $mysqli->connect_error);
-    }
-
-    // Définir l'encodage des caractères
-    $mysqli->set_charset("utf8mb4");
+    $pdo = new PDO($dsn, $username, $password, $options);
+    
+} catch (PDOException $e) {
+    die("Erreur de connexion à la base de données: " . $e->getMessage());
 }
 
 /**
- * Fonction pour exécuter une requête et retourner les résultats
- * 
- * @param string $sql La requête SQL
- * @param array $params Les paramètres de la requête
- * @return array Les résultats de la requête
+ * Exécute une requête et retourne les résultats
  */
 function db_query($sql, $params = []) {
-    global $db_type, $pdo, $mysqli;
+    global $pdo;
     
-    if ($db_type === 'postgresql') {
-        try {
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($params);
-            return $stmt->fetchAll();
-        } catch (PDOException $e) {
-            error_log("Erreur SQL (PostgreSQL): " . $e->getMessage());
-            return false;
-        }
-    } else {
-        try {
-            $stmt = $mysqli->prepare($sql);
-            
-            if (!empty($params)) {
-                // Construire les types de paramètres
-                $types = '';
-                foreach ($params as $param) {
-                    if (is_int($param)) {
-                        $types .= 'i';
-                    } elseif (is_float($param)) {
-                        $types .= 'd';
-                    } elseif (is_string($param)) {
-                        $types .= 's';
-                    } else {
-                        $types .= 'b';
-                    }
-                }
-                
-                // Bind des paramètres
-                $stmt->bind_param($types, ...$params);
-            }
-            
-            $stmt->execute();
-            $result = $stmt->get_result();
-            
-            $rows = [];
-            while ($row = $result->fetch_assoc()) {
-                $rows[] = $row;
-            }
-            
-            return $rows;
-        } catch (Exception $e) {
-            error_log("Erreur SQL (MySQL): " . $e->getMessage());
-            return false;
-        }
+    try {
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll();
+    } catch (PDOException $e) {
+        // Renvoyer l'exception pour un traitement plus spécifique
+        throw $e;
     }
 }
 
 /**
- * Fonction pour exécuter une requête sans retourner de résultats
- * 
- * @param string $sql La requête SQL
- * @param array $params Les paramètres de la requête
- * @return bool Succès ou échec de la requête
+ * Exécute une requête sans retourner de résultats
  */
 function db_exec($sql, $params = []) {
-    global $db_type, $pdo, $mysqli;
+    global $pdo;
     
-    if ($db_type === 'postgresql') {
-        try {
-            $stmt = $pdo->prepare($sql);
-            return $stmt->execute($params);
-        } catch (PDOException $e) {
-            error_log("Erreur SQL (PostgreSQL): " . $e->getMessage());
-            return false;
-        }
-    } else {
-        try {
-            $stmt = $mysqli->prepare($sql);
-            
-            if (!empty($params)) {
-                // Construire les types de paramètres
-                $types = '';
-                foreach ($params as $param) {
-                    if (is_int($param)) {
-                        $types .= 'i';
-                    } elseif (is_float($param)) {
-                        $types .= 'd';
-                    } elseif (is_string($param)) {
-                        $types .= 's';
-                    } else {
-                        $types .= 'b';
-                    }
-                }
-                
-                // Bind des paramètres
-                $stmt->bind_param($types, ...$params);
-            }
-            
-            return $stmt->execute();
-        } catch (Exception $e) {
-            error_log("Erreur SQL (MySQL): " . $e->getMessage());
-            return false;
-        }
+    try {
+        $stmt = $pdo->prepare($sql);
+        return $stmt->execute($params);
+    } catch (PDOException $e) {
+        // Renvoyer l'exception
+        throw $e;
     }
 }
 
 /**
- * Fonction pour obtenir l'ID du dernier enregistrement inséré
- * 
- * @return int L'ID du dernier enregistrement
+ * Retourne l'ID du dernier enregistrement inséré
  */
 function db_last_insert_id() {
-    global $db_type, $pdo, $mysqli;
-    
-    if ($db_type === 'postgresql') {
-        return $pdo->lastInsertId();
-    } else {
-        return $mysqli->insert_id;
-    }
+    global $pdo;
+    return $pdo->lastInsertId();
 }
 
 /**
- * Fonction pour obtenir un seul enregistrement
- * 
- * @param string $sql La requête SQL
- * @param array $params Les paramètres de la requête
- * @return array|bool L'enregistrement trouvé ou false
+ * Retourne un seul enregistrement
  */
 function db_query_single($sql, $params = []) {
     $result = db_query($sql, $params);
-    
-    if ($result && count($result) > 0) {
-        return $result[0];
-    }
-    
-    return false;
+    return $result && count($result) > 0 ? $result[0] : false;
 }
 
 /**
- * Fonction pour obtenir la dernière erreur SQL
- * 
- * @return string Le message d'erreur
+ * Retourne le message d'erreur SQL
  */
 function db_error() {
-    global $db_type, $pdo, $mysqli;
-    
-    if ($db_type === 'postgresql') {
-        if ($pdo) {
-            $error = $pdo->errorInfo();
-            return $error[2];
-        }
-    } else {
-        if ($mysqli) {
-            return $mysqli->error;
-        }
-    }
-    
-    return 'Erreur inconnue';
+    global $pdo;
+    $error = $pdo->errorInfo();
+    return $error[2] ?? 'Erreur inconnue';
 }
-
 ?>

@@ -38,12 +38,24 @@ if (session_status() === PHP_SESSION_NONE) {
                     <li class="nav-item">
                         <a class="nav-link" href="index.php"><i class="fas fa-home"></i> Accueil</a>
                     </li>
+                    <?php if (isset($_SESSION['etudiant_id'])): ?>
+                    <li class="nav-item">
+                        <a class="nav-link" href="dashboard_etudiant.php"><i class="fas fa-user-graduate"></i> Mon espace</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="logout_etudiant.php"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+                    </li>
+                    <?php else: ?>
                     <li class="nav-item">
                         <a class="nav-link" href="justifier_absence.php"><i class="fas fa-clipboard-check"></i> Justifier une absence</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="login_etudiant.php"><i class="fas fa-user"></i> Espace étudiant</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="login.php"><i class="fas fa-sign-in-alt"></i> Connexion</a>
                     </li>
+                    <?php endif; ?>
                 </ul>
             </div>
         </div>

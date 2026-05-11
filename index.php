@@ -1,12 +1,9 @@
 <?php
 /**
- * Page d'accueil principale
+ * Page d'accueil - Version WAMP
  */
 
-// Démarrer la session
 session_start();
-
-// Inclure les fichiers nécessaires
 require_once 'includes/functions.php';
 require_once 'config/database.php';
 
@@ -15,7 +12,6 @@ if (est_connecte()) {
     rediriger('accueil.php');
 }
 
-// Inclure le header public
 include 'includes/header_public.php';
 ?>
 
@@ -28,24 +24,9 @@ include 'includes/header_public.php';
                 </div>
                 <div class="card-body">
                     <div class="text-center mb-4">
-                        <img src="assets/images/attendance.svg" alt="Gestion de présence" class="img-fluid" style="max-height: 200px;">
-                    </div>
-                    
-                    <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-body">
                         <h1 class="display-4 text-center mb-4">Bienvenue dans le Système de Gestion de Présence</h1>
-                        <p class="lead text-center mb-4">Un outil moderne pour suivre et gérer les présences des étudiants.</p>
-                        <div class="text-center mt-4">
-                            <img src="assets/images/decoratives/La-reussite-scolaire.jpg" alt="La réussite scolaire" class="img-fluid rounded" style="max-width: 600px;">
-                        </div>
+                        <p class="lead text-center mb-4">Un outil moderne pour suivre et gérer les présences des étudiants avec QR codes mobile.</p>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
                     
                     <div class="row">
                         <div class="col-md-6">
@@ -53,15 +34,12 @@ include 'includes/header_public.php';
                                 <div class="card-body text-center">
                                     <i class="fas fa-user-graduate fa-3x mb-3 text-primary"></i>
                                     <h4>Espace Étudiant</h4>
-                                    <p>Justifiez vos absences en ligne</p>
+                                    <p>Connectez-vous et validez votre présence</p>
                                     <a href="login_etudiant.php" class="btn btn-primary">
                                         <i class="fas fa-sign-in-alt"></i> Se connecter
                                     </a>
                                     <a href="inscription_etudiant.php" class="btn btn-success mt-2">
                                         <i class="fas fa-user-plus"></i> Créer un compte
-                                    </a>
-                                    <a href="justifier_absence.php" class="btn btn-outline-primary mt-2">
-                                        <i class="fas fa-clipboard-check"></i> Justifier une absence
                                     </a>
                                 </div>
                             </div>
@@ -71,7 +49,7 @@ include 'includes/header_public.php';
                                 <div class="card-body text-center">
                                     <i class="fas fa-user-tie fa-3x mb-3 text-primary"></i>
                                     <h4>Espace Enseignant</h4>
-                                    <p>Gérez les présences de vos cours</p>
+                                    <p>Gérez les présences avec QR codes</p>
                                     <a href="login.php" class="btn btn-primary">
                                         <i class="fas fa-sign-in-alt"></i> Connexion
                                     </a>
@@ -81,7 +59,40 @@ include 'includes/header_public.php';
                     </div>
                     
                     <div class="alert alert-info mt-3">
+                        <h5><i class="fas fa-info-circle"></i> Fonctionnalités</h5>
+                        <ul class="mb-0">
+                            <li>Génération automatique de QR codes temporisés</li>
+                            <li>Scan mobile pour validation de présence</li>
+                            <li>Authentification sécurisée par étudiant</li>
+                            <li>Rapports de présence en temps réel</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
 
+            <!-- Informations techniques -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <i class="fas fa-cog"></i> Informations Système
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Configuration détectée:</h6>
+                            <p class="small mb-1"><strong>IP Serveur:</strong> 
+                                <?php 
+                                require_once 'config_reseau.php';
+                                echo IP_POINT_ACCES; 
+                                ?>
+                            </p>
+                            <p class="small mb-1"><strong>URL Mobile:</strong> <?= URL_BASE_QR ?></p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Outils de diagnostic:</h6>
+                            <a href="test_wamp.php" class="btn btn-sm btn-outline-info">
+                                <i class="fas fa-tools"></i> Test Configuration
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -89,7 +100,4 @@ include 'includes/header_public.php';
     </div>
 </div>
 
-<?php
-// Inclure le footer
-include 'includes/footer.php';
-?>
+<?php include 'includes/footer.php'; ?>

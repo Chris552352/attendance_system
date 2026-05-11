@@ -55,21 +55,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['justifier'])) {
         $message = "Veuillez fournir une justification.";
         $message_type = 'danger';
     } else {
-        // Mettre u00e0 jour directement la table presences
+        // Insérer la justification dans la table justifications (statut en_attente)
         $result = db_exec(
-            "UPDATE presences SET justification = ?, justifie = TRUE WHERE id = ?",
-            [$justification, $absence_id]
+            "INSERT INTO justifications (presence_id, contenu, statut) VALUES (?, ?, 'en_attente')",
+            [$absence_id, $justification]
         );
         
         if ($result) {
-            $message = "Votre absence a u00e9té justifiée avec succès.";
+            $message = "Votre justification a été soumise et est en attente de validation par l'administrateur.";
             $message_type = 'success';
-            
-            // Rechercher u00e0 nouveau l'u00e9tudiant pour mettre u00e0 jour la liste des absences
+            // Rechercher à nouveau l'étudiant pour mettre à jour la liste des absences
             $etudiant = db_query_single("SELECT * FROM etudiants WHERE matricule = ?", [$matricule]);
-            
             if ($etudiant) {
-                // Récupérer les absences de l'u00e9tudiant
                 $absences = db_query(
                     "SELECT p.id, p.date_presence, c.nom as cours_nom, c.code as cours_code, p.statut, p.justifie, p.justification 
                     FROM presences p 
@@ -80,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['justifier'])) {
                 );
             }
         } else {
-            $message = "Erreur lors de la justification de l'absence.";
+            $message = "Erreur lors de la soumission de la justification.";
             $message_type = 'danger';
         }
     }
