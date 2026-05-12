@@ -1,0 +1,228 @@
+@startuml MLD Système de Présence Universitaire
+
+!theme plain
+
+' ===== TABLES LOGIQUES (MySQL) =====
+
+entity utilisateurs {
+    *id: int(11) **PK** AUTO_INCREMENT
+    --
+    nom: varchar(100) **NN**
+    prenom: varchar(100) **NN**
+    email: varchar(150) **NN**, **UN**
+    mot_de_passe: varchar(255) **NN**
+    role: enum('admin','enseignant') **DF** 'enseignant'
+    date_creation: timestamp **NULL** **DF** CURRENT_TIMESTAMP
+    derniere_connexion: timestamp **NULL**
+}
+
+entity classes_etablissement {
+    *id: int(11) **PK** AUTO_INCREMENT
+    --
+    code: varchar(40) **NN**, **UN**
+    nom: varchar(180) **NN**
+    niveau: varchar(80) **NN**
+    filiere: varchar(120) **NN**
+    description: text **NULL**
+    actif: tinyint(1) **DF** 1
+    date_creation: timestamp **NULL** **DF** CURRENT_TIMESTAMP
+}
+
+entity etudiants {
+    *id: int(11) **PK** AUTO_INCREMENT
+    --
+    matricule: varchar(20) **NN**, **UN**
+    nom: varchar(100) **NN**
+    prenom: varchar(100) **NN**
+    email: varchar(150) **NN**, **UN**
+    classe_id: int(11) **NN** **FK**
+    date_inscription: timestamp **NULL** **DF** CURRENT_TIMESTAMP
+}
+
+entity comptes_etudiants {
+    *id: int(11) **PK** AUTO_INCREMENT
+    --
+    etudiant_id: int(11) **NN**, **FK**, **UN**
+    email: varchar(150) **NN**, **UN**
+    mot_de_passe: varchar(255) **NN**
+    date_creation: timestamp **NULL** **DF** CURRENT_TIMESTAMP
+    derniere_connexion: timestamp **NULL**
+    actif: tinyint(1) **DF** 1
+}
+
+entity cours {
+    *id: int(11) **PK** AUTO_INCREMENT
+    --
+    code: varchar(20) **NN**, **UN**
+    nom: varchar(150) **NN**
+    enseignant_id: int(11) **NULL** **FK**
+    description: text **NULL**
+}
+
+entity inscriptions {
+    *id: int(11) **PK** AUTO_INCREMENT
+    --
+    etudiant_id: int(11) **NN** **FK**
+    cours_id: int(11) **NN** **FK**
+    date_inscription: timestamp **NULL** **DF** CURRENT_TIMESTAMP
+}
+
+entity seances {
+    *id: int(11) **PK** AUTO_INCREMENT
+    --
+    nom_cours: varchar(150) **NN**
+    enseignant_id: int(11) **NN** **FK**
+    token: varchar(255) **NN**, **UN**
+    expiration: timestamp **NN**
+    date_creation: timestamp **NULL** **DF** CURRENT_TIMESTAMP
+    active: tinyint(1) **DF** 1
+}
+
+entity presences {
+    *id: int(11) **PK** AUTO_INCREMENT
+    --
+    etudiant_id: int(11) **NN** **FK**
+    cours_id: int(11) **NN** **FK**
+    seance_id: int(11) **NULL** **FK**
+    date_presence: date **NN**
+    statut: enum('present','absent') **DF** 'present'
+    justification: text **NULL**
+    justifie: tinyint(1) **DF** 0
+    enregistre_par: int(11) **NN** **FK**
+    date_enregistrement: timestamp **NULL** **DF** CURRENT_TIMESTAMP
+}
+
+entity salles {
+    *id: int(11) **PK** AUTO_INCREMENT
+    --
+    nom: varchar(100) **NN**, **UN**
+    batiment: varchar(50) **NULL**
+    capacite: int(11) **NULL**
+    equipements: text **NULL**
+    actif: tinyint(1) **DF** 1
+}
+
+entity types_seances {
+    *id: int(11) **PK** AUTO_INCREMENT
+    --
+    nom: varchar(50) **NN**, **UN**
+    mode_marquage: enum('qr','manuel','enseignant_seul') **DF** 'qr'
+    duree_minutes: int(11) **DF** 60
+    couleur: varchar(7) **NULL**
+}
+
+' ===== RELATIONS ET CONTRAINTES =====
+
+utilisateurs ||--o{ cours : "1,N"
+utilisateurs ||--o{ seances : "1,N"
+utilisateurs ||--o{ presences : "1,N"
+
+classes_etablissement ||--o{ etudiants : "1,N"
+etudiants }|--|| comptes_etudiants : "1,1"
+etudiants ||--o{ presences : "1,N"
+
+cours }o--o{ inscriptions : "N,M"
+cours ||--o{ presences : "1,N"
+
+inscriptions }o--|| etudiants : "N,1"
+inscriptions }o--|| cours : "N,1"
+
+seances ||--o{ presences : "1,N"
+seances }o--|| utilisateurs : "N,1"
+
+presences }o--|| etudiants : "N,1"
+presences }o--|| cours : "N,1"
+presences }o--|| utilisateurs : "N,1"
+
+' ===== INDEX ET PERFORMANCE =====
+
+note right of utilisateurs
+  **INDEX**
+  - PRIMARY (id)
+  - UNIQUE (email)
+  
+  **PERFORMANCE**
+  - Recherche par email fréquente
+  - Jointures avec cours, seances, presences
+end note
+
+note right of etudiants
+  **INDEX**
+  - PRIMARY (id)
+  - UNIQUE (matricule)
+  - UNIQUE (email)
+  - INDEX (classe_id)
+  
+  **PERFORMANCE**
+  - Recherche par matricule/email
+  - Filtrage par classe
+end note
+
+note right of presences
+  **INDEX**
+  - PRIMARY (id)
+  - UNIQUE (etudiant_id, seance_id)
+  - INDEX (cours_id)
+  - INDEX (seance_id)
+  - INDEX (enregistre_par)
+  
+  **PERFORMANCE**
+  - Éviter doublons par étudiant/séance
+  - Statistiques par cours/séance
+end note
+
+note right of seances
+  **INDEX**
+  - PRIMARY (id)
+  - UNIQUE (token)
+  - INDEX (enseignant_id)
+  
+  **PERFORMANCE**
+  - Validation rapide des tokens QR
+  - Séances par enseignant
+end note
+
+' ===== CONTRAINTES D'INTÉGRITÉ =====
+
+note bottom of classes_etablissement
+  **CONTRAINTE**
+  - RESTRICT ON DELETE pour etudiants
+  
+  **LOGIQUE**
+  - Impossible de supprimer une classe
+    si des étudiants y sont rattachés
+end note
+
+note bottom of cours
+  **CONTRAINTE**
+  - SET NULL ON DELETE pour enseignant_id
+  
+  **LOGIQUE**
+  - Si enseignant supprimé, le cours
+    devient sans responsable
+end note
+
+note bottom of presences
+  **CONTRAINTE**
+  - SET NULL ON DELETE pour seance_id
+  
+  **LOGIQUE**
+  - Si séance supprimée, présence
+    conservée pour historique
+end note
+
+' ===== DÉTAILS TECHNIQUES MySQL =====
+
+note as TechnicalDetails
+  **MOTEUR**: InnoDB
+  **ENCODAGE**: utf8mb4_unicode_ci
+  **COLLATION**: utf8mb4_unicode_ci
+  
+  **CARACTÉRISTIQUES**
+  - Support transactions ACID
+  - Clés étrangères avec intégrité
+  - Index optimisés pour les requêtes
+  - Support complet Unicode (emojis)
+end note
+
+@enduml

@@ -77,21 +77,15 @@ include 'includes/header_public.php';
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <h6>Configuration détectée:</h6>
-                            <p class="small mb-1"><strong>IP Serveur:</strong> 
-                                <?php 
+                            <p class="small mb-1"><strong>IP Serveur:</strong>
+                                <?php
                                 require_once 'config_reseau.php';
-                                echo IP_POINT_ACCES; 
+                                echo IP_POINT_ACCES;
                                 ?>
                             </p>
-                            <p class="small mb-1"><strong>URL Mobile:</strong> <?= URL_BASE_QR ?></p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6>Outils de diagnostic:</h6>
-                            <a href="test_wamp.php" class="btn btn-sm btn-outline-info">
-                                <i class="fas fa-tools"></i> Test Configuration
-                            </a>
+                            <p class="small mb-1"><strong>URL Mobile:</strong> <?= htmlspecialchars(URL_BASE_QR, ENT_QUOTES, 'UTF-8') ?></p>
                         </div>
                     </div>
                 </div>

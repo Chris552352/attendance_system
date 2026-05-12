@@ -1,0 +1,244 @@
+@startuml MCD Système de Présence - Formalisme Merise
+
+!theme plain
+
+' ===== ENTITÉS CONCEPTUELLES (MERISE) =====
+
+entity UTILISATEUR {
+    *id_utilisateur : int
+    --
+    nom : string
+    prenom : string
+    email : string
+    mot_de_passe : string
+    role : {admin, enseignant}
+    date_creation : date
+    derniere_connexion : date
+}
+
+entity ETUDIANT {
+    *id_etudiant : int
+    --
+    matricule : string
+    nom : string
+    prenom : string
+    email : string
+    date_inscription : date
+}
+
+entity PROMOTION {
+    *id_promotion : int
+    --
+    code_promotion : string
+    nom_promotion : string
+    niveau : {L1, L2, L3, M1, M2}
+    filiere : string
+    description : text
+    date_creation : date
+}
+
+entity COURS {
+    *id_cours : int
+    --
+    code_cours : string
+    nom_cours : string
+    description : text
+}
+
+entity SEANCE {
+    *id_seance : int
+    --
+    nom_seance : string
+    date_creation : date
+    heure_debut : time
+    heure_fin : time
+    token_qr : string
+    expiration_token : datetime
+    type_seance : {CM, TD, TP, Examen, Contrôle}
+    mode_marquage : {QR, Manuel, Enseignant seul}
+    statut_seance : {Planifiée, En cours, Terminée, Annulée}
+}
+
+entity PRESENCE {
+    *id_presence : int
+    --
+    date_presence : date
+    statut : {Présent, Absent, Retard}
+    justification : text
+    justifie : {Oui, Non}
+    date_enregistrement : datetime
+}
+
+entity SALLE {
+    *id_salle : int
+    --
+    nom_salle : string
+    batiment : string
+    capacite : int
+    equipements : text
+    statut_salle : {Active, Inactive}
+}
+
+entity COMPTE_MOBILE {
+    *id_compte : int
+    --
+    email_mobile : string
+    mot_de_passe_mobile : string
+    date_creation_compte : date
+    derniere_connexion_mobile : date
+    statut_compte : {Actif, Inactif}
+}
+
+' ===== ASSOCIATIONS CONCEPTUELLES (MERISE) =====
+
+' Association entre UTILISATEUR et COURS
+UTILISATEUR "1" -- "0..N" ENSEIGNER_COURS
+ENSEIGNER_COURS "1" -- "0..N" COURS
+
+' Association entre UTILISATEUR et SEANCE
+UTILISATEUR "1" -- "0..N" CREER_SEANCE
+CREER_SEANCE "1" -- "0..N" SEANCE
+
+' Association entre UTILISATEUR et PRESENCE
+UTILISATEUR "1" -- "0..N" ENREGISTRER_PRESENCE
+ENREGISTRER_PRESENCE "1" -- "0..N" PRESENCE
+
+' Association entre PROMOTION et ETUDIANT
+PROMOTION "1" -- "0..N" COMPRENDRE
+COMPRENDRE "1" -- "0..N" ETUDIANT
+
+' Association entre ETUDIANT et COMPTE_MOBILE
+ETUDIANT "1" -- "1..1" POSSEDER
+POSSEDER "1" -- "1..1" COMPTE_MOBILE
+
+' Association entre ETUDIANT et PRESENCE
+ETUDIANT "1" -- "0..N" AVOIR_PRESENCE
+AVOIR_PRESENCE "1" -- "0..N" PRESENCE
+
+' Association many-to-many entre ETUDIANT et COURS
+ETUDIANT "0..N" -- "0..N" INSCRIRE
+INSCRIRE "0..N" -- "0..N" COURS
+
+' Association entre COURS et SEANCE
+COURS "1" -- "0..N" GENERER_SEANCE
+GENERER_SEANCE "1" -- "0..N" SEANCE
+
+' Association entre COURS et PRESENCE
+COURS "1" -- "0..N" CONCERNER_PRESENCE
+CONCERNER_PRESENCE "1" -- "0..N" PRESENCE
+
+' Association entre SEANCE et PRESENCE
+SEANCE "1" -- "0..N" GENERER_PRESENCE
+GENERER_PRESENCE "1" -- "0..N" PRESENCE
+
+' Association entre SEANCE et SALLE
+SEANCE "0..1" -- "1..1" SE_DEROULER_DANS
+SE_DEROULER_DANS "1..1" -- "0..N" SALLE
+
+' ===== ENTITÉS ASSOCIATIVES (MERISE) =====
+
+entity INSCRIRE {
+    *id_etudiant : int
+    *id_cours : int
+    --
+    date_inscription : date
+    statut_inscription : {Actif, Inactif}
+}
+
+entity SE_DEROULER_DANS {
+    *id_seance : int
+    *id_salle : int
+    --
+    date_attribution : date
+}
+
+' ===== CONTRAINTES D'INTÉGRITÉ FONCTIONNELLES (CIF) =====
+
+note right of ETUDIANT
+  **CIF**
+  - matricule unique dans l'établissement
+  - email académique unique
+  - un étudiant appartient à une seule promotion
+  - un étudiant a un seul compte mobile
+end note
+
+note right of COURS
+  **CIF**
+  - code_cours unique et standardisé
+  - un cours est enseigné par un seul enseignant
+  - description obligatoire pour la transparence
+end note
+
+note right of SEANCE
+  **CIF**
+  - token_qr unique par séance
+  - pas de chevauchement horaire dans même salle
+  - token expiré automatiquement
+end note
+
+note right of PRESENCE
+  **CIF**
+  - un étudiant ne peut marquer qu'une fois par séance
+  - enregistrement horodaté et traçable
+  - auto-pointage uniquement en mode QR
+end note
+
+' ===== RÈGLES DE GESTION =====
+
+note bottom of INSCRIRE
+  **RÈGLES DE GESTION**
+  - Un étudiant peut s'inscrire à plusieurs cours
+  - Un cours peut avoir plusieurs étudiants
+  - L'inscription est datée et peut être désactivée
+  - L'inscription est obligatoire pour le marquage de présence
+end note
+
+note bottom of SE_DEROULER_DANS
+  **RÈGLES DE GESTION**
+  - Une séance se déroule dans une seule salle
+  - Une salle peut accueillir plusieurs séances
+  - Pas de conflit d'horaire dans la même salle
+  - Capacité de la salle respectée
+end note
+
+' ===== DÉPENDANCES FONCTIONNELLES =====
+
+note top of UTILISATEUR
+  **DÉPENDANCES**
+  - id_utilisateur → email (identification unique)
+  - role → {admin, enseignant} (contrôle d'accès)
+end note
+
+note top of ETUDIANT
+  **DÉPENDANCES**
+  - id_etudiant → matricule (identification unique)
+  - id_etudiant → email (identification unique)
+  - id_etudiant → id_promotion (appartenance promotion)
+end note
+
+note top of SEANCE
+  **DÉPENDANCES**
+  - id_seance → token_qr (authentification QR)
+  - id_seance → expiration_token (sécurité temporelle)
+end note
+
+' ===== NORMALISATION =====
+
+note as Normalisation
+  **FORMES NORMALES RESPECTÉES**
+  
+  **1FN** : Tous les attributs sont atomiques
+  - Pas d'attributs multivalués
+  - Pas d'attributs composés
+  
+  **2FN** : Pas de dépendance partielle
+  - Tous les attributs non-clé dépendent de la clé entière
+  
+  **3FN** : Pas de dépendance transitive
+  - Pas de dépendance entre attributs non-clés
+  
+  **BCNF** : Forme normale de Boyce-Codd
+  - Toutes les dépendances fonctionnelles triviales
+end note
+
+@enduml

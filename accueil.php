@@ -160,8 +160,8 @@ include 'includes/header.php';
                         } else {
                             foreach ($cours_populaires as $cours) {
                                 echo '<tr>
-                                    <td>' . htmlspecialchars($cours['nom']) . '</td>
-                                    <td>' . htmlspecialchars($cours['enseignant_nom']) . '</td>
+                                    <td>' . htmlspecialchars($cours['nom'] ?? '') . '</td>
+                                    <td>' . htmlspecialchars($cours['enseignant_nom'] ?? '') . '</td>
                                     <td>' . $cours['nb_etudiants'] . '</td>
                                     <td>' . $cours['nb_sessions'] . '</td>
                                 </tr>';
@@ -206,8 +206,8 @@ include 'includes/header.php';
                         } else {
                             foreach ($etudiants_assidus as $etudiant) {
                                 echo '<tr>
-                                    <td>' . htmlspecialchars($etudiant['nom'] . ' ' . $etudiant['prenom']) . '</td>
-                                    <td>' . htmlspecialchars($etudiant['matricule']) . '</td>
+                                    <td>' . htmlspecialchars(($etudiant['nom'] ?? '') . ' ' . ($etudiant['prenom'] ?? '')) . '</td>
+                                    <td>' . htmlspecialchars($etudiant['matricule'] ?? '') . '</td>
                                     <td>' . $etudiant['nb_cours'] . '</td>
                                     <td>' . ($etudiant['nb_presences'] ? $etudiant['nb_presences'] : '0') . '</td>
                                 </tr>';
