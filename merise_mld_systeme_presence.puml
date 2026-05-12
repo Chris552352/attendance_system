@@ -1,0 +1,184 @@
+@startuml
+' MLD Merise (3 pages) - syntaxe compatible editeur PlantUML en ligne
+
+skinparam roundcorner 8
+skinparam entityFontSize 10
+
+title MLD partie 1 sur 3 - Organisation et scolarite
+
+legend right
+  PK = cle primaire, FK = cle etrangere
+  NN = NOT NULL, UN = UNIQUE
+  Les FK sont indiquees dans les colonnes
+endlegend
+
+entity classes_etablissement {
+  *id : INT (PK)
+  --
+  code : VARCHAR (NN, UN)
+  nom : VARCHAR
+  niveau : VARCHAR
+  filiere : VARCHAR
+  actif : TINYINT
+  date_creation : TIMESTAMP
+}
+
+entity etudiants {
+  *id : INT (PK)
+  --
+  matricule : VARCHAR (NN, UN)
+  nom : VARCHAR
+  prenom : VARCHAR
+  email : VARCHAR (UN)
+  classe_id : INT (FK classes_etablissement)
+}
+
+entity comptes_etudiants {
+  *id : INT (PK)
+  --
+  etudiant_id : INT (NN, FK etudiants, UN)
+  email : VARCHAR
+  mot_de_passe : VARCHAR
+  actif : TINYINT
+}
+
+entity utilisateurs {
+  *id : INT (PK)
+  --
+  nom : VARCHAR
+  prenom : VARCHAR
+  email : VARCHAR (UN)
+  role : ENUM (admin, enseignant)
+}
+
+entity cours {
+  *id : INT (PK)
+  --
+  code : VARCHAR (UN)
+  nom : VARCHAR
+  description : TEXT
+  enseignant_id : INT (FK utilisateurs, NULL)
+}
+
+entity inscriptions {
+  *id : INT (PK)
+  --
+  etudiant_id : INT (FK etudiants)
+  cours_id : INT (FK cours)
+  date_inscription : TIMESTAMP
+  contrainte unicite (etudiant_id, cours_id)
+}
+
+newpage
+title MLD partie 2 sur 3 - Seances et referentiels
+
+entity types_seances {
+  *id : INT (PK)
+  --
+  nom : VARCHAR
+  code : VARCHAR (UN)
+  mode_marquage : ENUM
+  duree_minutes : INT
+}
+
+entity salles {
+  *id : INT (PK)
+  --
+  nom : VARCHAR (UN)
+  batiment : VARCHAR
+  capacite : INT
+  actif : TINYINT
+}
+
+entity seances {
+  *id : INT (PK)
+  --
+  nom_cours : VARCHAR
+  cours_id : INT (FK cours, NULL)
+  enseignant_id : INT (FK utilisateurs)
+  token : VARCHAR (UN)
+  expiration : TIMESTAMP
+  salle_id : INT (FK salles, NULL)
+  type_seance_id : INT (FK types_seances, NULL)
+  heure_debut : TIME
+  heure_fin : TIME
+  mode_marquage : ENUM
+  statut_seance : ENUM
+  date_seance : DATE
+}
+
+note bottom of seances
+nom_cours = lien textuel avec la table cours.
+cours_id en base = lien fort recommande.
+end note
+
+newpage
+title MLD partie 3 sur 3 - Presences et extensions
+
+entity presences {
+  *id : INT (PK)
+  --
+  etudiant_id : INT (FK etudiants)
+  cours_id : INT (FK cours)
+  seance_id : INT (FK seances, NULL)
+  date_presence : DATE
+  statut : ENUM
+  justification : TEXT
+  justifie : TINYINT
+  enregistre_par : INT (FK utilisateurs)
+  date_enregistrement : TIMESTAMP
+}
+
+entity justifications {
+  *id : INT (PK)
+  --
+  presence_id : INT (FK presences)
+  contenu : TEXT
+  statut : ENUM
+  validee_par : INT (FK utilisateurs, NULL)
+  date_soumission : DATETIME
+  date_validation : DATETIME
+}
+
+entity justification_messages {
+  *id : INT (PK)
+  --
+  justification_id : INT (FK justifications)
+  sender_type : ENUM
+  message : TEXT
+  created_at : DATETIME
+}
+
+entity retards {
+  *id : INT (PK)
+  --
+  etudiant_id : INT (FK etudiants)
+  seance_id : INT (FK seances)
+  minutes_retard : INT
+  motif : VARCHAR
+  date_enregistrement : TIMESTAMP
+}
+
+entity seuils_alerte {
+  *id : INT (PK)
+  --
+  cours_id : INT (FK cours)
+  type_alerte : ENUM
+  seuil : INT
+  email_destinataire : VARCHAR
+  actif : TINYINT
+}
+
+entity presence_mensuelle {
+  *id : INT (PK)
+  --
+  etudiant_id : INT (FK etudiants)
+  cours_id : INT (FK cours)
+  mois : INT
+  annee : INT
+  totaux : INT
+  taux : DECIMAL
+  contrainte unicite (etudiant_id, cours_id, mois, annee)
+}
+
+@enduml

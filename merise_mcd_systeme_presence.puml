@@ -1,0 +1,156 @@
+@startuml
+' MCD Merise (3 pages) - sans caracteres speciaux problematiques
+
+left to right direction
+skinparam nodesep 40
+skinparam ranksep 30
+skinparam roundcorner 10
+
+title MCD partie 1 sur 3 - Pedagogie et inscriptions
+
+legend right
+  # = identifiant. Cardinalites (min,max) sur chaque patte.
+  Pages 2 et 3 : seances puis presences.
+endlegend
+
+entity UTILISATEUR as U {
+  *id
+  --
+  nom, prenom, email
+  mot_de_passe, role
+}
+
+entity COURS as C {
+  *id
+  --
+  code, nom, description
+}
+
+entity ETUDIANT as E {
+  *id
+  --
+  matricule, nom, prenom, email
+}
+
+entity CLASSE_ETABLISSEMENT as CE {
+  *id
+  --
+  code, nom
+  niveau, filiere
+}
+
+entity COMPTE_ETUDIANT as CPT {
+  *id
+  --
+  email, mot de passe
+  etat du compte
+}
+
+entity INSCRIPTION <<associative>> as INS {
+  *id
+  --
+  date_inscription
+}
+
+CE ||--o{ E : (1,1)-(0,n) rattache
+
+E ||--|| CPT : (1,1)-(1,1) compte
+
+U |o--o{ C : (0,1)-(0,n) enseigne
+
+E ||--o{ INS : (1,1)-(0,n)
+C ||--o{ INS : (1,1)-(0,n)
+
+note bottom of INS
+Entite associative Inscription : couple Etudiant-Cours avec date.
+end note
+
+newpage
+title MCD partie 2 sur 3 - Seances
+
+entity COURS as C2 {
+  *id
+}
+
+entity UTILISATEUR as U2 {
+  *id
+}
+
+entity TYPE_SEANCE as TS {
+  *id
+  --
+  libelle, code
+  mode de marquage
+}
+
+entity SALLE as SL {
+  *id
+  --
+  nom, batiment, capacite
+}
+
+entity SEANCE as SE {
+  *id
+  --
+  jeton, expiration
+  creneau, mode, statut
+}
+
+C2 ||--o{ SE : (1,1)-(1,n) planifie
+
+U2 ||--o{ SE : (1,1)-(0,n) cree
+
+TS ||--o{ SE : (1,1)-(0,n) type
+
+SL |o--o{ SE : (0,1)-(0,n) lieu
+
+newpage
+title MCD partie 3 sur 3 - Presence et justification
+
+entity ETUDIANT as E3 {
+  *id
+}
+
+entity COURS as C3 {
+  *id
+}
+
+entity SEANCE as SE3 {
+  *id
+}
+
+entity UTILISATEUR as U3 {
+  *id
+}
+
+entity PRESENCE as P {
+  *id
+  --
+  date, statut
+  justification courte
+}
+
+entity JUSTIFICATION as JU {
+  *id
+  --
+  detail, statut
+  validation
+}
+
+E3 ||--o{ P : (1,1)-(0,n)
+C3 ||--o{ P : (1,1)-(0,n)
+SE3 |o--o{ P : (0,1)-(0,n)
+U3 ||--o{ P : (1,1)-(0,n)
+P ||--o| JU : (0,1)-(0,1)
+
+note as N1
+Annexes hors dessin : Retard (etudiant x seance),
+Seuil alerte (cours), Presence mensuelle (etudiant x cours x periode).
+end note
+
+note bottom of P
+Toute presence lie un Etudiant et un Cours.
+Lien Seance optionnel (manuel, feuille).
+end note
+
+@enduml

@@ -1,0 +1,201 @@
+@startuml
+' Diagramme de classes UML (3 pages) - pas de doublons de declaration entre pages
+
+skinparam classFontSize 10
+skinparam packageStyle rectangle
+
+title Classes UML partie 1 sur 3 - Pedagogie
+
+package Pedagogie {
+  class ClasseEtablissement {
+    -id : Integer
+    -code : String
+    -niveau : String
+    -filiere : String
+  }
+  class Etudiant {
+    -id : Integer
+    -matricule : String
+    -nom : String
+    -email : String
+  }
+  class CompteEtudiant {
+    -id : Integer
+    -emailConnexion : String
+    -actif : Boolean
+  }
+  class Cours {
+    -id : Integer
+    -code : String
+    -intitule : String
+  }
+  class Utilisateur {
+    -id : Integer
+    -email : String
+    -role : RoleUtilisateur
+  }
+  class Inscription {
+    -id : Integer
+    -dateInscription : DateTime
+  }
+}
+
+enum RoleUtilisateur {
+  admin
+  enseignant
+}
+
+ClasseEtablissement "1" -- "0..*" Etudiant
+Etudiant "1" -- "1" CompteEtudiant
+Utilisateur "0..1" -- "0..*" Cours
+Etudiant "1" -- "0..*" Inscription
+Cours "1" -- "0..*" Inscription
+Utilisateur ..> RoleUtilisateur
+
+newpage
+title Classes UML partie 2 sur 3 - Seances
+
+package Referentiel {
+  class TypeSeance {
+    -id : Integer
+    -sigle : String
+    -mode : ModeMarquage
+  }
+  class Salle {
+    -id : Integer
+    -nom : String
+  }
+}
+
+package Deroule {
+  class Seance {
+    -id : Integer
+    -jeton : String
+    -expiration : DateTime
+    -actif : Boolean
+  }
+}
+
+class CoursLie {
+  -id : Integer
+}
+
+class UserLie {
+  -id : Integer
+}
+
+enum ModeMarquage {
+  qr
+  manuel
+  enseignant_seul
+}
+
+enum StatutSeance {
+  planifiee
+  en_cours
+  terminee
+  annulee
+}
+
+CoursLie "1" -- "1..*" Seance : instance
+UserLie "1" -- "0..*" Seance : creePar
+TypeSeance "1" -- "0..*" Seance
+Salle "0..1" -- "0..*" Seance
+Seance ..> ModeMarquage
+Seance ..> StatutSeance
+
+note bottom of CoursLie
+Meme concept que Cours (page 1), ici rappel
+pour lier Seance sans dupliquer le nom Cours.
+end note
+
+newpage
+title Classes UML partie 3 sur 3 - Presence
+
+package PresenceJustif {
+  class Presence {
+    -id : Integer
+    -date : Date
+    -statut : StatutPresence
+    -justifie : Boolean
+  }
+  class Justification {
+    -id : Integer
+    -contenu : String
+    -statut : StatutJustification
+  }
+  class MessageJustification {
+    -id : Integer
+    -texte : String
+    -creeLe : DateTime
+    -expediteur : Expediteur
+  }
+}
+
+package Satellites {
+  class Retard {
+    -minutes : Integer
+  }
+  class SeuilAlerte {
+    -seuil : Integer
+  }
+  class PresenceMensuelle {
+    -mois : Integer
+    -annee : Integer
+  }
+}
+
+class StakeEtudiant {
+  -id : Integer
+}
+class StakeCours {
+  -id : Integer
+}
+class StakeSeance {
+  -id : Integer
+}
+class StakeUser {
+  -id : Integer
+}
+
+enum StatutPresence {
+  present
+  absent
+  retard
+  excuse
+}
+
+enum StatutJustification {
+  en_attente
+  validee
+  rejetee
+}
+
+enum Expediteur {
+  etudiant
+  staff
+}
+
+StakeEtudiant "1" -- "0..*" Presence
+StakeCours "1" -- "0..*" Presence
+StakeSeance "0..1" -- "0..*" Presence
+StakeUser "1" -- "0..*" Presence : saisit
+Presence "0..1" -- "0..1" Justification
+StakeUser "0..1" -- "0..*" Justification : valide
+Justification "1" -- "0..*" MessageJustification
+
+StakeEtudiant "1" -- "0..*" Retard
+StakeSeance "1" -- "0..*" Retard
+StakeCours "1" -- "0..*" SeuilAlerte
+StakeEtudiant "1" -- "0..*" PresenceMensuelle
+StakeCours "1" -- "0..*" PresenceMensuelle
+
+Presence ..> StatutPresence
+Justification ..> StatutJustification
+
+note bottom of StakeEtudiant
+Rappels des roles Etudiant, Cours, Seance, Utilisateur
+meme sens que les classes des pages 1 et 2.
+end note
+
+@enduml
